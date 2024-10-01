@@ -4,9 +4,12 @@ if not ok then
     error "Wrd Error: This plugin requires nvim-telescope/telescope.nvim"
 end
 
+local wrd = require("wrd")
+
 return telescope.register_extension {
-    setup = require("wrd").setup,
+    setup = wrd.setup,
     exports = {
-        wrd = require("wrd").wrd
+        wrd = wrd.run,
+        wrd_methods = wrd.run_methods
     },
 }

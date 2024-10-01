@@ -5,16 +5,16 @@ local DATAMUSE_API_URL = "https://api.dataMuse.com/words"
 local Muse = {
   key = "datamuse",
   available_methods = {
-    "means_like",
-    "sounds_like",
-    "spelled_like",
-    "synonym",
-    "antonym",
-    "popular_nouns",
-    "popular_adjectives",
-    "generalize",
-    "compromise",
-    "homophones"
+    means_like = "Means Like",
+    sounds_like = "Sounds Like",
+    spelled_like = "Spelled Like",
+    synonym = "Synonym",
+    antonym = "Antonym",
+    popular_nouns = "Popular Nouns",
+    popular_adjectives = "Popular Adjectives",
+    generalize = "Generalize",
+    compromise = "Compromise",
+    homophones = "Homophones"
   },
 }
 
@@ -56,17 +56,17 @@ end
 
 function Muse.means_like(word)
   local query = { ml = word }
-  return Muse._query(query), "Means Like"
+  return Muse._query(query)
 end
 
 function Muse.sounds_like(word)
   local query = { sl = word }
-  return Muse._query(query), "Sounds Like"
+  return Muse._query(query)
 end
 
 function Muse.spelled_like(word)
   local query = { sp = word }
-  return Muse._query(query), "Spelled Like"
+  return Muse._query(query)
 end
 
 function Muse._related(word, type)
@@ -75,31 +75,31 @@ function Muse._related(word, type)
 end
 
 function Muse.synonym(word)
-  return Muse._related(word, 'syn'), "Synonym"
+  return Muse._related(word, 'syn')
 end
 
 function Muse.antonym(word)
-  return Muse._related(word, 'ant'), "Antonym"
+  return Muse._related(word, 'ant')
 end
 
 function Muse.popular_nouns(word)
-  return Muse._related(word, 'jja'), "Popular Nouns"
+  return Muse._related(word, 'jja')
 end
 
 function Muse.popular_adjectives(word)
-  return Muse._related(word, 'jjb'), "Popular Adjectives"
+  return Muse._related(word, 'jjb')
 end
 
 function Muse.generalize(word)
-  return Muse._related(word, 'gen'), "Generalize"
+  return Muse._related(word, 'gen')
 end
 
 function Muse.compromise(word)
-  return Muse._related(word, 'com'), "Compromise"
+  return Muse._related(word, 'com')
 end
 
 function Muse.homophones(word)
-  return Muse._related(word, 'hom'), "Homophone"
+  return Muse._related(word, 'hom')
 end
 
 return Muse

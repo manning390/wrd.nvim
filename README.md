@@ -1,6 +1,6 @@
 # Wrd.nvim
 
-`wrd.nvim` is an extendable thesaurus and dictionary plugin built on [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim). It leverages [datamuse](https://datamuse.com/) apis and provides multiple functions for finding words related to your query.
+`wrd.nvim` is an extendable thesaurus and dictionary plugin built on [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for neovim. It leverages [datamuse](https://datamuse.com/) apis and provides multiple functions for finding words related to your query.
 
 ## Table of Contents
 - [Getting Started](#getting-started)

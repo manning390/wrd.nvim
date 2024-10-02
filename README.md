@@ -56,19 +56,25 @@ Plug 'manning390/wrd.nvim'
 ```
 
 ## Usage
-If you aren't using the `lazy.nvim` snippet above you'll need to set up the plugin by running the following one time:
+If you aren't using the `lazy.nvim` snippet above you'll need to run setup at least once to get the `:Wrd` command. Or you can call the internal methods directly via keybinds.
 ```lua
-require('wrd').setup({})
+require('wrd').setup({}) -- Registers :Wrd
+-- or
+vim.keymap.set('n', 'z/', require'wrd'.run, { desc = 'Wrd: Run default wrd query'})
+vim.keymap.set('n', 'zm', require'wrd'.run_methods, { desc = 'Wrd: List available methods from client'})
 ```
+
 ### Default configuration
 These are the default values, set to overwrite:
 ```lua
+-- Setup({})
 {
     client_key = "datamuse", -- Set to target internal client API
     default_method = "means_like", -- Default method if one is not provided, must be available in client API
     commands = true, -- Register the :Wrd command
     client = nil -- Can be set to provide custom client API, if unset, will instance `client` from `client_key`
 }
+-- run({})
 ```
 ### Command
 With the default config the `:Wrd` command will get automatically registered.
@@ -86,3 +92,9 @@ While you are browsing the dictionary responses, you may want to dig deeper or c
 
 - `<tab>` Will take the currently highlighted word within telescope and rerun your method with that word.
 - `?` Will prompt you to change methods provided by the client with the current queried word.
+
+### Selection
+
+After finding a word or phrase that you want to use, you can select it with `enter` as you normally would by default within telescope.
+
+This will store the word within the `*` and `@`. If you are hovered over a word, it will directly replace it.

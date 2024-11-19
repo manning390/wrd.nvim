@@ -23,11 +23,11 @@ function Muse.entry_maker(entry, opts)
     value = entry,
     ordinal = entry.word,
     display = entry.word,
-    wrd = {
-      opts = opts,
-      word = entry.word,
-    },
   }
+end
+
+function Muse.previewer(entry)
+  return entry.value.defs
 end
 
 function Muse._query(query)

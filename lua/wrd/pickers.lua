@@ -4,12 +4,12 @@ local previewer = require("telescope.previewers")
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local conf = require("telescope.config").values
-local wrd_actions = require("telescope._extensions.wrd.actions")
+local wrd_actions = require("wrd.actions")
+
 
 local M = {}
 
 function M.word_picker(data, prompt, opts)
--- function M.word_picker(data, prompt, callbacks, opts)
   pickers
       .new(opts, {
         prompt_title = prompt,
@@ -24,7 +24,7 @@ function M.word_picker(data, prompt, opts)
         previewer = previewer.new_buffer_previewer({
           define_preview = function(self, entry, status)
             vim.wo[self.state.winid].wrap = true
-            vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, entry.value.defs or {})
+            vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, opts.client.previewer(entry) or {})
           end,
           title = "Definition",
         }),
@@ -34,7 +34,7 @@ function M.word_picker(data, prompt, opts)
             wrd_actions.select(prompt_bufnr)
           end)
 
-          for mode, mode_mappings in pairs (opts.mappings) do
+          for mode, mode_mappings in pairs(opts.mappings) do
             for key, action in pairs(mode_mappings) do
               map(mode, key, action)
             end

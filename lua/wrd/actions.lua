@@ -2,8 +2,8 @@ local ok, actions = pcall(require, "telescope.actions")
 if not ok then
 	error("Wrd Error: This plugin requires nvim-telescope/telescope.nvim")
 end
+
 local action_state = require("telescope.actions.state")
-local wrd = require("wrd")
 
 local M = {}
 
@@ -23,12 +23,12 @@ end
 
 function M.follow(_)
 	local selection = action_state.get_selected_entry()
-	wrd.run(vim.tbl_extend("keep", { word = selection.wrd.word }, selection.wrd.opts))
+	require("wrd").run(vim.tbl_extend("keep", { word = selection.wrd.word }, selection.wrd.opts))
 end
 
 function M.methods(_)
 	local selection = action_state.get_selected_entry()
-	wrd.run_methods(vim.tbl_extend("keep", { method = "" }, selection.wrd.opts))
+	require("wrd").run_methods(vim.tbl_extend("keep", { method = "" }, selection.wrd.opts))
 end
 
 return require('telescope.actions.mt').transform_mod(M)

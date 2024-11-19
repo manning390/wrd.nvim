@@ -18,16 +18,16 @@ local Muse = {
   },
 }
 
-function Muse.entry_maker(entry)
+function Muse.entry_maker(entry, opts)
   return {
     value = entry,
     ordinal = entry.word,
     display = entry.word,
+    wrd = {
+      opts = opts,
+      word = entry.word,
+    },
   }
-end
-
-function Muse.entry_selected(selected_entry_value)
-  return selected_entry_value.word
 end
 
 function Muse._query(query)

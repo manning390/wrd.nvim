@@ -4,17 +4,19 @@ local previewer = require("telescope.previewers")
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local conf = require("telescope.config").values
+local wrd_actions = require("telescope._extensions.wrd.actions")
 
 local M = {}
 
-function M.word_picker(data, prompt, callbacks, opts)
+function M.word_picker(data, prompt, opts)
+-- function M.word_picker(data, prompt, callbacks, opts)
   pickers
       .new(opts, {
         prompt_title = prompt,
         finder = finders.new_table({
           results = data,
           entry_maker = function(entry)
-            return entry
+            return opts.client.entry_maker(entry, opts)
           end,
           static = true,
         }),
@@ -29,22 +31,15 @@ function M.word_picker(data, prompt, callbacks, opts)
         attach_mappings = function(_, map)
           -- i,n <cr>
           actions.select_default:replace(function(prompt_bufnr)
-            actions.close(prompt_bufnr)
-            callbacks.select(action_state.get_selected_entry().value)
+            wrd_actions.select(prompt_bufnr)
           end)
 
-          local methods = function()
-            callbacks.methods(action_state.get_selected_entry().value)
+          for mode, mode_mappings in pairs (opts.mappings) do
+            for key, action in pairs(mode_mappings) do
+              map(mode, key, action)
+            end
           end
 
-          local follow = function()
-            callbacks.follow(action_state.get_selected_entry().value)
-          end
-
-          map("i", "<tab>", follow)
-          map("n", "<tab>", follow)
-          map("i", "?", methods)
-          map("n", "?", methods)
           return true
         end,
       })
@@ -64,7 +59,7 @@ function M.method_picker(available_methods, callback, opts)
         finder = finders.new_table({
           results = data,
           entry_maker = function(entry)
-            return entry
+            return opts.client.entry_maker(entry, opts)
           end,
           static = true,
         }),

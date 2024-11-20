@@ -7,9 +7,9 @@ local action_state = require("telescope.actions.state")
 
 local M = {}
 
-function M.select(prompt_bufnr)
+function M.wrd_select(prompt_bufnr)
 	local selection = action_state.get_selected_entry()
-	local selected_word = selection.client.word
+	local selected_word = selection.wrd.word
 
 	vim.fn.setreg("*", selected_word)
 	vim.fn.setreg("@", selected_word)
@@ -21,14 +21,18 @@ function M.select(prompt_bufnr)
 	actions.close(prompt_bufnr)
 end
 
-function M.follow(_)
+function M.wrd_follow(_)
 	local selection = action_state.get_selected_entry()
-	require("wrd").run(vim.tbl_extend("keep", { word = selection.wrd.word }, selection.wrd.opts))
+	if selection then
+		require("wrd").run(vim.tbl_extend("keep", { word = selection.wrd.word }, selection.wrd.opts))
+	end
 end
 
-function M.methods(_)
+function M.wrd_methods(_)
 	local selection = action_state.get_selected_entry()
-	require("wrd").run_methods(vim.tbl_extend("keep", { method = "" }, selection.wrd.opts))
+	if selection then
+		require("wrd").run_methods(vim.tbl_extend("keep", { method = "" }, selection.wrd.opts))
+	end
 end
 
-return require('telescope.actions.mt').transform_mod(M)
+return M

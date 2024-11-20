@@ -15,14 +15,14 @@ local default_config = {
 	commands = true,
 	mappings = {
 		i = {
-			["<tab>"] = actions.follow,
-			["/"] = actions.methods,
+			["<tab>"] = actions.wrd_methods,
+			["/"] = actions.wrd_follow,
 		},
 		n = {
-			["<tab>"] = actions.follow,
-			["/"] = actions.methods,
+			["<tab>"] = actions.wrd_methods,
+			["/"] = actions.wrd_follow,
 		},
-	}
+	},
 }
 
 function wrd.setup(config)
@@ -89,11 +89,12 @@ function wrd.run(opts)
 end
 
 function wrd.make_client(opts)
-	local client_key = opts.client_key or vim.g.telescope_wrd_config.client_key
-	local ok, client = pcall(require, "wrd.clients." .. client_key)
+	opts.client_key = opts.client_key or vim.g.telescope_wrd_config.client_key
+	local ok, client = pcall(require, "wrd.clients." .. opts.client_key)
 	if not ok then
-		error(string.format("Wrd Error: Client '%s' is not available", client_key))
+		error(string.format("Wrd Error: Client '%s' is not available", opts.client_key))
 	end
+
 	opts.client = client
 	return opts
 end
@@ -110,29 +111,6 @@ function wrd.fetch(word, query_method, client)
 	-- Run our query
 	return client[query_method](word)
 end
-
--- function M.default_callbacks(opts)
--- 	return {
--- 		select = function(selected_entry_value)
--- 			local selected_word = opts.client.entry_selected(selected_entry_value)
---
--- 			vim.fn.setreg("*", selected_word)
--- 			vim.fn.setreg("@", selected_word)
--- 			if vim.fn.expand("<cword>") ~= "" then
--- 				vim.cmd("norm diw")
--- 				vim.api.nvim_put({ selected_word }, "", false, true)
--- 			end
--- 		end,
--- 		follow = function(selected_entry_value)
--- 			local selected_word = opts.client.entry_selected(selected_entry_value)
---
--- 			M.run(vim.tbl_extend("keep", { word = selected_word }, opts))
--- 		end,
--- 		methods = function(_)
--- 			M.run_methods(vim.tbl_extend("keep", { method = "" }, opts))
--- 		end,
--- 	}
--- end
 
 function wrd.run_methods(opts)
 	opts = opts or {}

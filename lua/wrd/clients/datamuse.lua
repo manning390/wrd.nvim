@@ -18,11 +18,12 @@ local Muse = {
   },
 }
 
-function Muse.entry_maker(entry, opts)
+function Muse.entry_maker(entry)
   return {
     value = entry,
     ordinal = entry.word,
     display = entry.word,
+    wrd = { word = entry.word }
   }
 end
 
@@ -47,9 +48,6 @@ function Muse._query(query)
   end
 
   local data = vim.fn.json_decode(resp.body)
-
-  -- Map data to telescope entries
-  data = vim.tbl_map(Muse.entry_maker, data)
 
   return data
 end

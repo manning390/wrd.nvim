@@ -6,7 +6,6 @@ local action_state = require("telescope.actions.state")
 local conf = require("telescope.config").values
 local wrd_actions = require("wrd.actions")
 
-
 local M = {}
 
 function M.word_picker(data, prompt, opts)
@@ -16,13 +15,13 @@ function M.word_picker(data, prompt, opts)
         finder = finders.new_table({
           results = data,
           entry_maker = function(entry)
-            return opts.client.entry_maker(entry, opts)
+            return vim.tbl_deep_extend("force", { wrd = { opts = opts } }, opts.client.entry_maker(entry))
           end,
           static = true,
         }),
         sorter = conf.generic_sorter(opts),
         previewer = previewer.new_buffer_previewer({
-          define_preview = function(self, entry, status)
+          define_preview = function(self, entry, _)
             vim.wo[self.state.winid].wrap = true
             vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, opts.client.previewer(entry) or {})
           end,
@@ -30,11 +29,8 @@ function M.word_picker(data, prompt, opts)
         }),
         attach_mappings = function(_, map)
           -- i,n <cr>
-          actions.select_default:replace(function(prompt_bufnr)
-            wrd_actions.select(prompt_bufnr)
-          end)
-
-          for mode, mode_mappings in pairs(opts.mappings) do
+          actions.select_default:replace(wrd_actions.wrd_select)
+          for mode, mode_mappings in pairs(opts.mappings or {}) do
             for key, action in pairs(mode_mappings) do
               map(mode, key, action)
             end
@@ -59,7 +55,7 @@ function M.method_picker(available_methods, callback, opts)
         finder = finders.new_table({
           results = data,
           entry_maker = function(entry)
-            return opts.client.entry_maker(entry, opts)
+            return entry
           end,
           static = true,
         }),

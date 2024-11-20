@@ -42,9 +42,7 @@ end
 --    client_key: string
 --    client: Client
 --    mappings: { mode = { [key] = action } }
---
---    Telescope opts
---    prompt_title: string
+--    prompt: string
 -- }
 function wrd.run(opts)
 	opts = opts or {}
@@ -54,7 +52,7 @@ function wrd.run(opts)
 	end
 
 	if not opts.client then
-		opts = wrd.make_client(opts)
+		opts = wrd._make_client(opts)
 	end
 
 	if not opts.method or opts.method == "" then
@@ -83,12 +81,12 @@ function wrd.run(opts)
 		end
 	end
 
-	local data = wrd.fetch(opts.word, opts.method, opts.client)
+	local data = wrd._fetch(opts.word, opts.method, opts.client)
 
 	return pickers.word_picker(data, prompt, opts)
 end
 
-function wrd.make_client(opts)
+function wrd._make_client(opts)
 	opts.client_key = opts.client_key or vim.g.telescope_wrd_config.client_key
 	local ok, client = pcall(require, "wrd.clients." .. opts.client_key)
 	if not ok then
@@ -99,7 +97,7 @@ function wrd.make_client(opts)
 	return opts
 end
 
-function wrd.fetch(word, query_method, client)
+function wrd._fetch(word, query_method, client)
 	if not query_method or word == "" then
 		return -- Early Escape for cancels
 	end
@@ -116,7 +114,7 @@ function wrd.run_methods(opts)
 	opts = opts or {}
 
 	if not opts.client then
-		opts = wrd.make_client(opts)
+		opts = wrd._make_client(opts)
 	end
 
 	local callback = function(selection)

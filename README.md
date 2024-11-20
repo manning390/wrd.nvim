@@ -56,9 +56,16 @@ Plug 'manning390/wrd.nvim'
 ```
 
 ## Usage
-If you aren't using the `lazy.nvim` snippet above you'll need to run setup at least once to get the `:Wrd` command. Or you can call the internal methods directly via keybinds.
+If you aren't using the `lazy.nvim` snippet above you'll need to run setup at least once to get the `:Wrd` command.
+
+Or you can load the plugin as a telescope extension which will register the telescope flavored commands.
+
+Or you can call the internal methods directly via keymaps.
+
 ```lua
 require('wrd').setup({}) -- Registers :Wrd
+-- or
+require('telescope').load_extension('wrd')
 -- or
 vim.keymap.set('n', 'z/', require'wrd'.run, { desc = 'Wrd: Run default wrd query'})
 vim.keymap.set('n', 'zm', require'wrd'.run_methods, { desc = 'Wrd: List available methods from client'})
@@ -71,10 +78,20 @@ These are the default values, set to overwrite:
 {
     client_key = "datamuse", -- Set to target internal client API
     default_method = "means_like", -- Default method if one is not provided, must be available in client API
-    commands = true, -- Register the :Wrd command
+    commands = true, -- Register the :Wrd command, does not affect telescope bindings
     client = nil -- Can be set to provide custom client API, if unset, will instance `client` from `client_key`
+    -- Following telescopes mapping format
+	mappings = {
+		i = {
+			["<tab>"] = require('wrd.actions').wrd_methods,
+			["/"] = require('wrd.actions').wrd_follow,
+		},
+		n = {
+			["<tab>"] = require('wrd.actions').wrd_methods,
+			["/"] = require('wrd.actions').wrd_follow,
+		},
+	},
 }
--- run({})
 ```
 ### Command
 With the default config the `:Wrd` command will get automatically registered.
@@ -85,13 +102,19 @@ With the default config the `:Wrd` command will get automatically registered.
 :Wrd
 :Wrd sesquipedalian
 ```
-If you pass no arguments you will be promted for a word, autofilled with what's under your cursor. Or you may pass a word directly.
+
+If you loaded the plugin with telescope
+```
+:Telescope wrd run
+:Telescope wrd methods
+```
+If you pass no arguments you will be prompted for a word, autofilled with what's under your cursor. Or you may pass a word directly.
 
 ### Chaining
 While you are browsing the dictionary responses, you may want to dig deeper or change your query.
 
-- `<tab>` Will take the currently highlighted word within telescope and rerun your method with that word.
-- `?` Will prompt you to change methods provided by the client with the current queried word.
+- `/` Will take the currently highlighted word within telescope and rerun your method with that word.
+- `<tab>` Will prompt you to change methods provided by the client with the current queried word.
 
 ### Selection
 

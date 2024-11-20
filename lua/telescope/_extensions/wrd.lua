@@ -9,9 +9,7 @@ local wrd = require("wrd")
 return telescope.register_extension({
 	setup = wrd.setup,
 	exports = {
-		wrd = wrd,
-		wrd_run = wrd.run,
-		wrd_methods = wrd.run_methods,
+		run = wrd.run,
+		methods = wrd.run_methods,
 	},
 })
-

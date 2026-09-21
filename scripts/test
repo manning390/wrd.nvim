@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+
+NVIM_LOG_FILE="${WRD_NVIM_LOG_FILE:-/tmp/wrd-nvim-test.log}"
+export NVIM_LOG_FILE
+
+exec "${NVIM:-nvim}" --headless --noplugin -u tests/minimal_init.lua -i NONE \
+  -c "PlenaryBustedDirectory tests/wrd { minimal_init = 'tests/minimal_init.lua', sequential = true }"

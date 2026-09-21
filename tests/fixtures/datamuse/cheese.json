@@ -1,0 +1,39 @@
+[
+  {
+    "word": "cheeseflower",
+    "score": 20050066,
+    "tags": ["syn", "n", "results_type:primary_rel", "f:0.000000"],
+    "defs": [
+      "n\terect or decumbent old world perennial with axillary clusters of rosy-purple flowers"
+    ]
+  },
+  {
+    "word": "mozzarella",
+    "score": 20050065,
+    "tags": ["n", "f:0.185870"],
+    "defs": [
+      "n\tSoft Italian or Italian-style cheese made from cow's or buffalo's milk.",
+      "n\t(uncountable, slang, African-American Vernacular) Money."
+    ]
+  },
+  {
+    "word": "cheesy",
+    "score": 20049702,
+    "tags": ["adj", "f:0.175909"],
+    "defs": [
+      "adj\t(informal) Overdramatic, excessively emotional or clichéd.",
+      "adj\tOf or relating to cheese."
+    ]
+  },
+  {
+    "word": "curd",
+    "score": 10050128,
+    "tags": ["n", "v", "f:0.585520"],
+    "defs": [
+      "n\tThe part of milk that coagulates when it sours or is treated with enzymes.",
+      "n\t(India) Dahi.",
+      "v\t(intransitive) To form curd; to curdle.",
+      "n\tThe coagulated part of any liquid."
+    ]
+  }
+]

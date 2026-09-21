@@ -12,6 +12,11 @@ local function show_pending(value)
 	end
 end
 
+function M.feed_backspace()
+	local key = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
+	vim.api.nvim_feedkeys(key, "n", false)
+end
+
 function M.attach(prompt_bufnr, map, opts)
 	opts = opts or {}
 	if opts.enabled == false then
@@ -45,7 +50,7 @@ function M.attach(prompt_bufnr, map, opts)
 
 	map("i", "<bs>", function()
 		if not controller.backspace() then
-			actions.delete_char_backward(prompt_bufnr)
+			M.feed_backspace()
 		end
 	end)
 	for _, mode in ipairs({ "i", "n" }) do

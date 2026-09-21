@@ -90,6 +90,7 @@ These are the default values, which you can override:
     -- Follows Telescope's mapping format
     mappings = {
         i = {
+            ["<C-e>"] = require('wrd.actions').wrd_change_word,
             ["<C-j>"] = require('wrd.actions').wrd_cycle_part_of_speech,
             ["<C-y>"] = require('wrd.actions').wrd_copy,
             ["<F1>"] = require('wrd.actions').wrd_help,
@@ -97,6 +98,7 @@ These are the default values, which you can override:
             ["/"] = require('wrd.actions').wrd_follow,
         },
         n = {
+            ["<C-e>"] = require('wrd.actions').wrd_change_word,
             ["<C-j>"] = require('wrd.actions').wrd_cycle_part_of_speech,
             ["<C-y>"] = require('wrd.actions').wrd_copy,
             ["<F1>"] = require('wrd.actions').wrd_help,
@@ -128,14 +130,16 @@ While you are browsing the dictionary responses, you may want to dig deeper or c
 
 - `/` Will take the currently highlighted word within telescope and rerun your method with that word.
 - `<tab>` Will prompt you to change methods provided by the client with the current queried word.
+- `<C-e>` Lets you replace the current query word and reruns the same method. Cancelling or submitting the unchanged word leaves the existing picker open.
 
 ### Ranked navigation
 
 Datamuse results display their original relevance rank. Type that number while
 the picker is open to move the highlight and preview without filtering the
 list. A short `Wrd jump: …` indicator appears while the picker waits for another
-digit. Press `enter` to resolve a partial number immediately, `backspace` to
-edit it, or `escape` to cancel it.
+digit. Press `enter` to resolve a partial number immediately. Pending rank input
+expires automatically; Wrd does not override Backspace or Escape, so they keep
+their normal Telescope behavior.
 
 Digits are reserved for rank navigation in both insert and normal mode. Set
 `rank_jump.enabled = false` if you need digits to be entered into Telescope's

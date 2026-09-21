@@ -15,6 +15,7 @@ local function defaults()
 		},
 		mappings = {
 			i = {
+				["<C-e>"] = actions.wrd_change_word,
 				["<C-j>"] = actions.wrd_cycle_part_of_speech,
 				["<C-y>"] = actions.wrd_copy,
 				["<F1>"] = actions.wrd_help,
@@ -22,6 +23,7 @@ local function defaults()
 				["/"] = actions.wrd_follow,
 			},
 			n = {
+				["<C-e>"] = actions.wrd_change_word,
 				["<C-j>"] = actions.wrd_cycle_part_of_speech,
 				["<C-y>"] = actions.wrd_copy,
 				["<F1>"] = actions.wrd_help,

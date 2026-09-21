@@ -51,6 +51,27 @@ function M.wrd_methods(prompt_bufnr)
 	end
 end
 
+function M.wrd_change_word(prompt_bufnr)
+	local selected = action_state.get_selected_entry()
+	if not selected then
+		return
+	end
+
+	local opts = vim.tbl_extend("force", {}, selected.wrd.opts)
+	vim.ui.input({ prompt = "Wrd word: ", default = opts.word }, function(word)
+		word = word and vim.fn.trim(word) or ""
+		if word == "" or word == opts.word then
+			return
+		end
+
+		if vim.api.nvim_buf_is_valid(prompt_bufnr) then
+			actions.close(prompt_bufnr)
+		end
+		opts.word = word
+		require("wrd").run(opts)
+	end)
+end
+
 local function refine(prompt_bufnr, part_of_speech)
 	local picker = action_state.get_current_picker(prompt_bufnr)
 	local refinement = picker and picker._wrd_refinement

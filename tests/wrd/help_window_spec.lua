@@ -4,6 +4,9 @@ describe("help window", function()
 	it("uses a disposable scratch buffer and restores focus when closed", function()
 		local origin_win = vim.api.nvim_get_current_win()
 		local window = help_window.open({ "Wrd help", "q closes" })
+		vim.wait(100, function()
+			return vim.api.nvim_get_current_win() ~= origin_win
+		end)
 		local help_bufnr = vim.api.nvim_get_current_buf()
 
 		assert.is_true(window.is_open())

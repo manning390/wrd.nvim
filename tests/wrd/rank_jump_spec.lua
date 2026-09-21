@@ -122,7 +122,7 @@ describe("rank jump", function()
 		assert.are.equal(10, committed)
 	end)
 
-	it("allows pending input to be edited, cancelled, or committed early", function()
+	it("allows pending input to be committed early", function()
 		local committed
 		local controller = rank_jump.new({
 			schedule = function() end,
@@ -131,18 +131,10 @@ describe("rank jump", function()
 			end,
 		})
 
-		assert.is_false(controller.backspace())
-		assert.is_false(controller.cancel())
 		controller.feed("1")
-		controller.feed("0")
-		assert.is_true(controller.backspace())
 		assert.are.equal("1", controller.pending())
 		assert.is_true(controller.commit())
 		assert.are.equal(1, committed)
-
-		controller.feed("2")
-		assert.is_true(controller.cancel())
-		assert.are.equal("", controller.pending())
 	end)
 
 	it("reports zero and out-of-range ranks through the commit callback", function()

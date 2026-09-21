@@ -27,7 +27,7 @@ function M.open(lines, opts)
 	local origin_win = vim.api.nvim_get_current_win()
 	local origin_mode = vim.fn.mode()
 	local bufnr = vim.api.nvim_create_buf(false, true)
-	local winid = vim.api.nvim_open_win(bufnr, true, dimensions(lines))
+	local winid = vim.api.nvim_open_win(bufnr, false, dimensions(lines))
 	local group = vim.api.nvim_create_augroup("WrdHelp" .. bufnr, { clear = true })
 	local closed = false
 	local window = {}
@@ -40,7 +40,6 @@ function M.open(lines, opts)
 	vim.bo[bufnr].modifiable = false
 	vim.wo[winid].wrap = false
 	vim.wo[winid].cursorline = true
-	vim.cmd.stopinsert()
 
 	function window.is_open()
 		return not closed and vim.api.nvim_win_is_valid(winid)
@@ -97,6 +96,13 @@ function M.open(lines, opts)
 			end,
 		})
 	end
+
+	vim.schedule(function()
+		if window.is_open() then
+			vim.api.nvim_set_current_win(winid)
+			pcall(vim.cmd.stopinsert)
+		end
+	end)
 
 	return window
 end

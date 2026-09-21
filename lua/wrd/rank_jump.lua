@@ -56,24 +56,6 @@ function M.new(opts)
 		return pending
 	end
 
-	function controller.cancel()
-		if pending == "" then
-			return false
-		end
-
-		update("")
-		return true
-	end
-
-	function controller.backspace()
-		if pending == "" then
-			return false
-		end
-
-		update(pending:sub(1, -2))
-		return true
-	end
-
 	function controller.commit()
 		if pending == "" then
 			return false

@@ -102,6 +102,33 @@ describe("wrd picker actions", function()
 		assert.are.equal("", method_opts.method)
 	end)
 
+	it("changes the current query word while preserving its insertion target", function()
+		local input_opts
+		local input_callback
+		local original_input = vim.ui.input
+		vim.ui.input = function(opts, callback)
+			input_opts = opts
+			input_callback = callback
+		end
+		local target = { kind = "word", bufnr = 7 }
+		selection = {
+			wrd = {
+				word = "parmesan",
+				opts = { word = "cheese", method = "means_like", target = target },
+			},
+		}
+
+		wrd_actions.wrd_change_word(0)
+		assert.are.equal("cheese", input_opts.default)
+		assert.is_nil(closed_prompt)
+		input_callback(" bread ")
+		vim.ui.input = original_input
+
+		assert.are.equal("bread", run_opts.word)
+		assert.are.equal("means_like", run_opts.method)
+		assert.are.equal(target, run_opts.target)
+	end)
+
 	it("does nothing when no result is selected", function()
 		wrd_actions.wrd_select(21)
 		wrd_actions.wrd_follow(42)

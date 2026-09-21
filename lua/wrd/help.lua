@@ -7,6 +7,7 @@ local documented_actions = {
 	{ handler = wrd_actions.wrd_copy, description = "copy highlighted word without editing" },
 	{ handler = wrd_actions.wrd_follow, description = "follow highlighted word with current method" },
 	{ handler = wrd_actions.wrd_methods, description = "change method for the original query word" },
+	{ handler = wrd_actions.wrd_change_word, description = "change the search word and rerun" },
 	{
 		handler = wrd_actions.wrd_cycle_part_of_speech,
 		description = "cycle part-of-speech filter",
@@ -91,14 +92,13 @@ function M.build(picker, opts)
 		"",
 		"Search and navigate",
 		"  text               fuzzy-filter eligible words",
-		"  Backspace          delete fuzzy text when no rank is pending",
+		"  Backspace          delete fuzzy-search text",
 		"  <C-n>/<C-p>, ↑/↓   move through results",
 	})
 	if capabilities.rank_jump then
 		vim.list_extend(lines, {
 			"  0-9                build an original-rank jump",
 			"  Enter              resolve a pending rank immediately",
-			"  Backspace/Escape   edit/cancel a pending rank",
 		})
 	end
 

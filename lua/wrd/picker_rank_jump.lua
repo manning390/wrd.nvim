@@ -1,4 +1,3 @@
-local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local rank_jump = require("wrd.rank_jump")
 
@@ -10,11 +9,6 @@ local function show_pending(value)
 	else
 		vim.api.nvim_echo({ { "Wrd jump: " .. value .. "_", "ModeMsg" } }, false, {})
 	end
-end
-
-function M.feed_backspace()
-	local key = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
-	vim.api.nvim_feedkeys(key, "n", false)
 end
 
 function M.attach(prompt_bufnr, map, opts)
@@ -46,19 +40,6 @@ function M.attach(prompt_bufnr, map, opts)
 		end
 		map("i", value, feed)
 		map("n", value, feed)
-	end
-
-	map("i", "<bs>", function()
-		if not controller.backspace() then
-			M.feed_backspace()
-		end
-	end)
-	for _, mode in ipairs({ "i", "n" }) do
-		map(mode, "<esc>", function()
-			if not controller.cancel() then
-				actions.close(prompt_bufnr)
-			end
-		end)
 	end
 
 	return controller

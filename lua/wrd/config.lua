@@ -35,7 +35,7 @@ local function defaults()
 end
 
 function M.setup(opts)
-	values = vim.tbl_extend("keep", opts or {}, defaults())
+	values = vim.tbl_deep_extend("force", defaults(), opts or {})
 	return values
 end
 

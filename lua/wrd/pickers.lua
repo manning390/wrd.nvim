@@ -116,12 +116,20 @@ function M.method_picker(available_methods, callback, opts)
 				end,
 			}),
 			sorter = conf.generic_sorter(opts),
-			attach_mappings = function(prompt_bufnr)
+			attach_mappings = function(prompt_bufnr, map)
+				picker_help.attach(prompt_bufnr, opts)
 				actions.select_default:replace(function()
 					local selection = action_state.get_selected_entry().value
 					actions.close(prompt_bufnr)
 					callback(selection)
 				end)
+				for mode, mode_mappings in pairs(opts.mappings or {}) do
+					for key, action in pairs(mode_mappings) do
+						if action == wrd_actions.wrd_help then
+							map(mode, key, action)
+						end
+					end
+				end
 				return true
 			end,
 		})

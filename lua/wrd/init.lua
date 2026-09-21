@@ -103,9 +103,13 @@ end
 
 function wrd.run_methods(opts)
 	opts = opts or {}
+	local current = config.get()
 
 	if not opts.client then
 		opts = wrd._make_client(opts)
+	end
+	if not opts.mappings then
+		opts.mappings = current.mappings
 	end
 
 	local callback = function(selection)
@@ -115,7 +119,7 @@ function wrd.run_methods(opts)
 	return pickers.method_picker(
 		opts.client.available_methods,
 		callback,
-		vim.tbl_extend("force", opts, { prompt_title = "Client Methods" })
+		vim.tbl_extend("force", opts, { prompt_title = "Client Methods", _wrd_picker_kind = "methods" })
 	)
 end
 

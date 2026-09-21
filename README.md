@@ -108,6 +108,10 @@ These are the default values, which you can override:
     },
 }
 ```
+
+Mapping overrides are merged per mode and key. You can change one binding
+without copying the rest of the default mapping table; set a specific mapping
+to `false` to disable it.
 ### Command
 With the default config the `:Wrd` command will get automatically registered.
 

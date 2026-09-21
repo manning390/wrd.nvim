@@ -22,7 +22,7 @@ describe("wrd configuration", function()
 		assert.are.equal("function", type(values.mappings.n["/"]))
 	end)
 
-	it("keeps caller overrides", function()
+	it("merges caller overrides without dropping unrelated default mappings", function()
 		local mappings = { i = { x = function() end } }
 		local values = config.setup({
 			client_key = "custom",
@@ -34,7 +34,9 @@ describe("wrd configuration", function()
 		assert.are.equal("custom", values.client_key)
 		assert.are.equal("lookup", values.default_method)
 		assert.is_false(values.commands)
-		assert.are.same(mappings, values.mappings)
+		assert.are.equal(mappings.i.x, values.mappings.i.x)
+		assert.are.equal("function", type(values.mappings.i["<F1>"]))
+		assert.are.equal("function", type(values.mappings.n["<F1>"]))
 	end)
 
 	it("initializes lazily", function()

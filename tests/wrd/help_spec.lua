@@ -52,4 +52,18 @@ describe("help model", function()
 
 		assert.is_false(contains(lines, "build an original-rank jump"))
 	end)
+
+	it("describes method selection without advertising word-picker actions", function()
+		local lines = help.build(nil, {
+			_wrd_picker_kind = "methods",
+			word = "cheese",
+			client = { key = "custom" },
+			mappings = { i = { ["<F1>"] = actions.wrd_help } },
+		})
+
+		assert.is_true(contains(lines, "fuzzy-filter available methods"))
+		assert.is_true(contains(lines, "rerun the current query with this method"))
+		assert.is_false(contains(lines, "replace the original"))
+		assert.is_false(contains(lines, "build an original-rank jump"))
+	end)
 end)

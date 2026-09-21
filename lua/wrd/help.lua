@@ -61,14 +61,15 @@ end
 
 function M.build(picker, opts)
 	opts = opts or {}
+	local method_picker = opts._wrd_picker_kind == "methods"
 	local client = opts.client or {}
 	local client_name = client.name or client.key or opts.client_key or "custom"
-	local method_label = (client.available_methods or {})[opts.method] or opts.method or "unknown"
+	local method_label = (client.available_methods or {})[opts.method] or opts.method
 	local method_description = (client.method_descriptions or {})[opts.method]
 	local filter = "All"
 	local capabilities = {
-		refinement = picker and picker._wrd_refinement ~= nil,
-		rank_jump = opts._wrd_normalized and (opts.rank_jump or {}).enabled ~= false,
+		refinement = not method_picker and picker and picker._wrd_refinement ~= nil,
+		rank_jump = not method_picker and opts._wrd_normalized and (opts.rank_jump or {}).enabled ~= false,
 	}
 	if capabilities.refinement then
 		filter = refinement.label(picker._wrd_refinement.current()) or picker._wrd_refinement.current()
@@ -79,8 +80,10 @@ function M.build(picker, opts)
 		"",
 		string.format("Query: %s", opts.word or ""),
 		string.format("Client: %s", client_name),
-		string.format("Method: %s", method_label),
 	}
+	if method_label and method_label ~= "" then
+		table.insert(lines, string.format("Method: %s", method_label))
+	end
 	if capabilities.refinement then
 		table.insert(lines, string.format("Part-of-speech filter: %s", filter))
 	end
@@ -91,10 +94,29 @@ function M.build(picker, opts)
 	vim.list_extend(lines, {
 		"",
 		"Search and navigate",
-		"  text               fuzzy-filter eligible words",
+		method_picker and "  text               fuzzy-filter available methods"
+			or "  text               fuzzy-filter eligible words",
 		"  Backspace          delete fuzzy-search text",
 		"  <C-n>/<C-p>, ↑/↓   move through results",
 	})
+	if method_picker then
+		vim.list_extend(lines, {
+			"",
+			"Choose a method",
+			"  Enter              rerun the current query with this method",
+		})
+		for _, item in ipairs(documented_actions) do
+			if item.handler == wrd_actions.wrd_help then
+				append_mapping(lines, opts.mappings, item, capabilities)
+			end
+		end
+		vim.list_extend(lines, {
+			"",
+			"Picker",
+			"  <C-c>/Escape       close the method picker",
+		})
+		return lines, effective_keys(opts.mappings, wrd_actions.wrd_help)
+	end
 	if capabilities.rank_jump then
 		vim.list_extend(lines, {
 			"  0-9                build an original-rank jump",

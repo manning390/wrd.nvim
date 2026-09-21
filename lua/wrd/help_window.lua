@@ -19,18 +19,18 @@ local function dimensions(lines)
 		title = " Wrd Help ",
 		title_pos = "center",
 		zindex = 100,
+		focusable = false,
 	}
 end
 
 function M.open(lines, opts)
 	opts = opts or {}
 	local origin_win = vim.api.nvim_get_current_win()
-	local origin_mode = vim.fn.mode()
 	local bufnr = vim.api.nvim_create_buf(false, true)
 	local winid = vim.api.nvim_open_win(bufnr, false, dimensions(lines))
 	local group = vim.api.nvim_create_augroup("WrdHelp" .. bufnr, { clear = true })
 	local closed = false
-	local window = {}
+	local window = { bufnr = bufnr, winid = winid }
 
 	vim.bo[bufnr].buftype = "nofile"
 	vim.bo[bufnr].bufhidden = "wipe"
@@ -57,24 +57,12 @@ function M.open(lines, opts)
 		if vim.api.nvim_buf_is_valid(bufnr) then
 			vim.api.nvim_buf_delete(bufnr, { force = true })
 		end
-		if restore_focus ~= false and vim.api.nvim_win_is_valid(origin_win) then
+		if
+			restore_focus ~= false
+			and vim.api.nvim_win_is_valid(origin_win)
+			and vim.api.nvim_get_current_win() ~= origin_win
+		then
 			vim.api.nvim_set_current_win(origin_win)
-			if origin_mode:sub(1, 1) == "i" then
-				vim.cmd.startinsert()
-			end
-		end
-	end
-
-	local close = function()
-		window.close(true)
-	end
-	for _, key in ipairs({ "q", "<esc>" }) do
-		vim.keymap.set("n", key, close, { buffer = bufnr, nowait = true, silent = true })
-	end
-	for _, mapped in ipairs(opts.close_keys or {}) do
-		local key = mapped:match("^[in]:(.*)$")
-		if key then
-			vim.keymap.set("n", key, close, { buffer = bufnr, nowait = true, silent = true })
 		end
 	end
 
@@ -96,13 +84,6 @@ function M.open(lines, opts)
 			end,
 		})
 	end
-
-	vim.schedule(function()
-		if window.is_open() then
-			vim.api.nvim_set_current_win(winid)
-			pcall(vim.cmd.stopinsert)
-		end
-	end)
 
 	return window
 end

@@ -165,9 +165,10 @@ actions: `wrd_filter_all`, `wrd_filter_nouns`, `wrd_filter_adjectives`,
 
 Press `<F1>` to open Wrd's capabilities window. It shows the active query,
 client, method, part-of-speech filter, and the effective Wrd mappings after your
-configuration is applied. Press `<F1>`, `q`, or `escape` to return to the same
-picker prompt, filter, selection, and preview. Telescope's generic mapping help
-remains available separately through `<C-/>` or `?` in normal mode.
+configuration is applied. The overlay deliberately leaves focus in Telescope;
+press `<F1>` again to close it. Closing the picker also removes the overlay.
+Telescope's generic mapping help remains available separately through `<C-/>`
+or `?` in normal mode.
 
 ### Selection and copying
 

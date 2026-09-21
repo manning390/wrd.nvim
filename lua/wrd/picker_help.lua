@@ -16,9 +16,8 @@ function M.attach(prompt_bufnr, opts)
 			return
 		end
 
-		local lines, close_keys = help.build(picker, opts)
+		local lines = help.build(picker, opts)
 		active_window = help_window.open(lines, {
-			close_keys = close_keys,
 			parent_bufnr = prompt_bufnr,
 		})
 	end

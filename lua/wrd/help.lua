@@ -117,7 +117,6 @@ function M.build(picker, opts)
 		"  <C-u>/<C-d>        scroll the definition preview",
 		"  <C-/> or n:?       Telescope's generic mapping help",
 		"  <C-c>/Escape       close the picker",
-		"  q/Escape           close this help",
 	})
 
 	return lines, effective_keys(opts.mappings, wrd_actions.wrd_help)

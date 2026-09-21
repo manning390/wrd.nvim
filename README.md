@@ -8,7 +8,7 @@
 
 ## Getting Started
 
-Requires [Neovim (v0.9.0)](https://github.com/neovim/neovim/releases/tag/v0.9.0), or the lastest neovim nightly commit, for `telescope.nvim`, which is heavily used under the hood. See Telescope installation documentation in case of issues.
+Requires [Neovim v0.10.4](https://github.com/neovim/neovim/releases/tag/v0.10.4) or newer. This matches the minimum supported version for `telescope.nvim` v0.2.0.
 
 ### Required dependencies
 - [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) is required.
@@ -23,27 +23,30 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
     'manning390/wrd.nvim',
     dependencies = {
         'nvim-lua/plenary.nvim',
-        {'nvim-telescope/telescope.nvim', tag = '0.1.6'}
+        { 'nvim-telescope/telescope.nvim', tag = 'v0.2.0' },
     },
     opts = {},
 }
 -- plugins/wrd.lua:
 return {
     'manning390/wrd.nvim',
-      dependencies = {
+    dependencies = {
         'nvim-lua/plenary.nvim',
-        {'nvim-telescope/telescope.nvim', tag = '0.1.6'}
-      },
-      opts = {},
-    }
+        { 'nvim-telescope/telescope.nvim', tag = 'v0.2.0' },
+    },
+    opts = {},
+}
 ```
 
 Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
 ```lua
 use {
-    'manning390/wrd.nvim'
-    requires = { {'nvim-lua/plenary.nvim'}, {'/telescope.nvim', tag = '0.1.6'} }
+    'manning390/wrd.nvim',
+    requires = {
+        'nvim-lua/plenary.nvim',
+        { 'nvim-telescope/telescope.nvim', tag = 'v0.2.0' },
+    },
 }
 ```
 
@@ -51,12 +54,12 @@ Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```viml
 Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.6' }
+Plug 'nvim-telescope/telescope.nvim', { 'tag': 'v0.2.0' }
 Plug 'manning390/wrd.nvim'
 ```
 
 ## Usage
-If you aren't using the `lazy.nvim` snippet above you'll need to run setup at least once to get the `:Wrd` command.
+If you aren't using the `lazy.nvim` snippet above, you'll need to run setup at least once to get the `:Wrd` command.
 
 Or you can load the plugin as a telescope extension which will register the telescope flavored commands.
 
@@ -67,30 +70,40 @@ require('wrd').setup({}) -- Registers :Wrd
 -- or
 require('telescope').load_extension('wrd')
 -- or
-vim.keymap.set('n', 'z/', require'wrd'.run, { desc = 'Wrd: Run default wrd query'})
-vim.keymap.set('n', 'zm', require'wrd'.run_methods, { desc = 'Wrd: List available methods from client'})
+vim.keymap.set('n', 'z/', require('wrd').run, { desc = 'Wrd: Run default query' })
+vim.keymap.set('n', 'zm', require('wrd').run_methods, { desc = 'Wrd: List client methods' })
 ```
 
 ### Default configuration
-These are the default values, set to overwrite:
+These are the default values, which you can override:
 ```lua
 -- Setup({})
 {
-    client_key = "datamuse", -- Set to target internal client API
-    default_method = "means_like", -- Default method if one is not provided, must be available in client API
-    commands = true, -- Register the :Wrd command, does not affect telescope bindings
-    client = nil -- Can be set to provide custom client API, if unset, will instance `client` from `client_key`
-    -- Following telescopes mapping format
-	mappings = {
-		i = {
-			["<tab>"] = require('wrd.actions').wrd_methods,
-			["/"] = require('wrd.actions').wrd_follow,
-		},
-		n = {
-			["<tab>"] = require('wrd.actions').wrd_methods,
-			["/"] = require('wrd.actions').wrd_follow,
-		},
-	},
+    client_key = "datamuse", -- Select the built-in client API
+    default_method = "means_like", -- Must be available in the selected client API
+    commands = true, -- Register :Wrd; does not affect Telescope exports
+    client = nil, -- Provide a custom client API; otherwise `client_key` is used
+    rank_jump = {
+        enabled = true, -- Treat digits as result ranks instead of fuzzy-search text
+        delay_ms = 600, -- Wait briefly for another digit before jumping
+    },
+    -- Follows Telescope's mapping format
+    mappings = {
+        i = {
+            ["<C-j>"] = require('wrd.actions').wrd_cycle_part_of_speech,
+            ["<C-y>"] = require('wrd.actions').wrd_copy,
+            ["<F1>"] = require('wrd.actions').wrd_help,
+            ["<tab>"] = require('wrd.actions').wrd_methods,
+            ["/"] = require('wrd.actions').wrd_follow,
+        },
+        n = {
+            ["<C-j>"] = require('wrd.actions').wrd_cycle_part_of_speech,
+            ["<C-y>"] = require('wrd.actions').wrd_copy,
+            ["<F1>"] = require('wrd.actions').wrd_help,
+            ["<tab>"] = require('wrd.actions').wrd_methods,
+            ["/"] = require('wrd.actions').wrd_follow,
+        },
+    },
 }
 ```
 ### Command
@@ -116,8 +129,76 @@ While you are browsing the dictionary responses, you may want to dig deeper or c
 - `/` Will take the currently highlighted word within telescope and rerun your method with that word.
 - `<tab>` Will prompt you to change methods provided by the client with the current queried word.
 
-### Selection
+### Ranked navigation
 
-After finding a word or phrase that you want to use, you can select it with `enter` as you normally would by default within telescope.
+Datamuse results display their original relevance rank. Type that number while
+the picker is open to move the highlight and preview without filtering the
+list. A short `Wrd jump: …` indicator appears while the picker waits for another
+digit. Press `enter` to resolve a partial number immediately, `backspace` to
+edit it, or `escape` to cancel it.
 
-This will store the word within the `*` and `@`. If you are hovered over a word, it will directly replace it.
+Digits are reserved for rank navigation in both insert and normal mode. Set
+`rank_jump.enabled = false` if you need digits to be entered into Telescope's
+fuzzy-search prompt. A rank hidden by the current fuzzy query is left hidden
+and produces an informational message instead of clearing the query.
+
+### Part-of-speech filtering
+
+Press `<C-j>` in the word picker to cycle through All, Nouns, Adjectives,
+Verbs, and Adverbs. Categories with no eligible results are skipped. The
+results title shows the active filter and its count, such as
+`Words · Nouns (35/100)`.
+
+Filtering uses metadata already returned by Datamuse. It does not make another
+request, reset fuzzy-search text, or renumber results. Untagged words appear in
+All but not in a specific part-of-speech subset.
+
+For separate custom bindings instead of cycling, map any of these public
+actions: `wrd_filter_all`, `wrd_filter_nouns`, `wrd_filter_adjectives`,
+`wrd_filter_verbs`, or `wrd_filter_adverbs` from `require('wrd.actions')`.
+
+### In-picker help
+
+Press `<F1>` to open Wrd's capabilities window. It shows the active query,
+client, method, part-of-speech filter, and the effective Wrd mappings after your
+configuration is applied. Press `<F1>`, `q`, or `escape` to return to the same
+picker prompt, filter, selection, and preview. Telescope's generic mapping help
+remains available separately through `<C-/>` or `?` in normal mode.
+
+### Selection and copying
+
+Wrd captures the original editing target before Telescope opens. Pressing
+`enter` copies the highlighted word to the unnamed (`"`), `+`, and `*`
+registers and then applies it as follows:
+
+- On a word, it replaces that complete word.
+- On whitespace, it inserts at the original cursor without deleting text.
+- From a characterwise visual mapping, it replaces the exact selection.
+- From a linewise visual mapping or `:'<,'>Wrd`, it replaces the selected lines.
+- For blockwise selections, unmodifiable buffers, or a target that disappeared,
+  it copies only and displays an informational message.
+
+Use `<C-y>` to copy and close the picker without editing the original buffer.
+Afterward, ordinary `p`/`P` paste after/before the cursor. To replace a different
+word manually, use your normal Vim operation, for example `viwp` or
+`"_ciw<C-r>"`. The black-hole register in the latter prevents the deleted word
+from overwriting Wrd's value in the unnamed register.
+
+For exact characterwise visual replacement, map the Lua entry point in visual
+mode:
+
+```lua
+vim.keymap.set('x', 'z/', require('wrd').run, { desc = 'Wrd: Replace selection' })
+```
+
+## Development
+
+Run the offline test suite from the repository root:
+
+```sh
+./scripts/test
+```
+
+The test harness looks for Plenary and Telescope in the standard `lazy.nvim`
+data directory. Set `PLENARY_PATH` or `TELESCOPE_PATH` if either dependency is
+installed elsewhere.

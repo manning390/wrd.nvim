@@ -11,16 +11,22 @@ local function change_results_title(picker, title)
 	end
 end
 
-function M.attach(prompt_bufnr, entries, entry_maker)
+function M.attach(prompt_bufnr, entries, entry_maker, finder_factory)
 	local picker = action_state.get_current_picker(prompt_bufnr)
 	local state = refinement.new(entries)
 
 	local function refresh(filtered)
-		picker:refresh(
-			finders.new_table({
+		local finder
+		if finder_factory then
+			finder = finder_factory(filtered)
+		else
+			finder = finders.new_table({
 				results = filtered,
 				entry_maker = entry_maker,
-			}),
+			})
+		end
+		picker:refresh(
+			finder,
 			{ reset_prompt = false }
 		)
 		change_results_title(picker, state.title())

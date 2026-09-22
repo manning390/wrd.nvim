@@ -14,6 +14,7 @@ local function defaults()
 			delay_ms = 600,
 		},
 		picker = {
+			presentation = "list",
 			layout_strategy = "horizontal",
 			layout_config = {
 				width = 0.95,
@@ -24,6 +25,17 @@ local function defaults()
 				},
 			},
 			show_part_of_speech = true,
+			grid = {
+				columns = 5,
+				cell_width = 18,
+				separator = " │ ",
+				preview_width = 0.4,
+				show_part_of_speech = false,
+				mappings = {
+					left = "<C-Left>",
+					right = "<C-Right>",
+				},
+			},
 		},
 		mappings = {
 			i = {

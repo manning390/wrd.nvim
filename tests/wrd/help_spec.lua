@@ -76,4 +76,14 @@ describe("help model", function()
 		assert.is_false(contains(lines, "replace the original"))
 		assert.is_false(contains(lines, "build an original-rank jump"))
 	end)
+
+	it("describes configured cell navigation for the grid prototype", function()
+		local lines = help.build({ _wrd_grid = {} }, {
+			picker = { grid = { mappings = { left = "H", right = "L" } } },
+		})
+
+		assert.is_true(contains(lines, "Grid navigation"))
+		assert.is_true(contains(lines, "H"))
+		assert.is_true(contains(lines, "L"))
+	end)
 end)

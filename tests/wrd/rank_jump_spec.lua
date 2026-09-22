@@ -48,6 +48,29 @@ describe("rank jump", function()
 		assert.are.equal(2, #entries)
 	end)
 
+	it("selects a rank packed into a grid cell", function()
+		local active_column
+		local refreshed = false
+		local state = {
+			activate = function(_, column) active_column = column end,
+			refresh = function() refreshed = true end,
+		}
+		local picker, selected_row = picker_with({
+			{
+				wrd = { rank = 1 },
+				wrd_grid = {
+					cells = { { rank = 1 }, { rank = 51 } },
+					state = state,
+				},
+			},
+		})
+
+		assert.is_true(rank_jump.select(picker, 51))
+		assert.are.equal(2, active_column)
+		assert.are.equal(0, selected_row())
+		assert.is_true(refreshed)
+	end)
+
 	it("commits a single-digit rank after the debounce", function()
 		local scheduled
 		local committed

@@ -7,6 +7,7 @@ local conf = require("telescope.config").values
 local wrd_actions = require("wrd.actions")
 local entries = require("wrd.entries")
 local picker_help = require("wrd.picker_help")
+local picker_grid = require("wrd.picker_grid")
 local picker_rank_jump = require("wrd.picker_rank_jump")
 local picker_refinement = require("wrd.picker_refinement")
 local preview = require("wrd.preview")
@@ -28,6 +29,14 @@ end
 
 function M.word_picker(data, prompt, opts)
 	local layout = M.word_layout(opts)
+	local grid_state
+	if (opts.picker or {}).presentation == "grid" then
+		local grid_opts = opts.picker.grid or {}
+		grid_state = require("wrd.grid").new(data, grid_opts, opts)
+		layout.layout_config = vim.deepcopy(layout.layout_config)
+		layout.layout_config.horizontal = layout.layout_config.horizontal or {}
+		layout.layout_config.horizontal.preview_width = grid_opts.preview_width or 0.4
+	end
 	local highest_rank = 0
 	for _, result in ipairs(data) do
 		highest_rank = math.max(highest_rank, result.rank or 0)
@@ -38,8 +47,16 @@ function M.word_picker(data, prompt, opts)
 	end
 
 	local function preview_lines(entry)
+		if grid_state then
+			grid_state.activate(entry, grid_state.column)
+		end
 		return preview.format_result(entry.value)
 	end
+
+	local finder = grid_state and picker_grid.finder(grid_state) or finders.new_table({
+		results = data,
+		entry_maker = make_entry,
+	})
 
 	pickers
 		.new(opts, {
@@ -47,11 +64,9 @@ function M.word_picker(data, prompt, opts)
 			layout_strategy = layout.layout_strategy,
 			sorting_strategy = "ascending",
 			layout_config = layout.layout_config,
-			finder = finders.new_table({
-				results = data,
-				entry_maker = make_entry,
-			}),
-			sorter = conf.generic_sorter(opts),
+			finder = finder,
+			sorter = grid_state and require("telescope.sorters").empty() or conf.generic_sorter(opts),
+			selection_strategy = grid_state and "row" or nil,
 			tiebreak = function(current_entry, existing_entry, current_prompt)
 				if current_prompt == "" then
 					return false
@@ -71,8 +86,14 @@ function M.word_picker(data, prompt, opts)
 			attach_mappings = function(prompt_bufnr, map)
 				local jump
 				picker_help.attach(prompt_bufnr, opts)
+				if grid_state then
+					picker_grid.attach(prompt_bufnr, map, grid_state, opts.picker.grid)
+				end
 				if (opts.capabilities or {}).parts_of_speech then
-					picker_refinement.attach(prompt_bufnr, data, make_entry)
+					picker_refinement.attach(prompt_bufnr, data, make_entry, grid_state and function(filtered)
+						grid_state.set_results(filtered)
+						return picker_grid.finder(grid_state)
+					end or nil)
 				end
 				if (opts.capabilities or {}).rank_jump then
 					jump = picker_rank_jump.attach(

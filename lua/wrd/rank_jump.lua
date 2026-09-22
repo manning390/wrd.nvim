@@ -4,7 +4,7 @@ local function is_digit(value)
 	return type(value) == "string" and value:match("^%d$") ~= nil
 end
 
-function M.find_row(picker, rank)
+function M.find_position(picker, rank)
 	if not picker or not picker.manager then
 		return nil
 	end
@@ -12,7 +12,14 @@ function M.find_row(picker, rank)
 	local index = 1
 	for entry in picker.manager:iter() do
 		if entry.wrd and entry.wrd.rank == rank then
-			return picker:get_row(index)
+			return picker:get_row(index), nil, entry
+		end
+		if entry.wrd_grid then
+			for column, result in ipairs(entry.wrd_grid.cells) do
+				if result.rank == rank then
+					return picker:get_row(index), column, entry
+				end
+			end
 		end
 		index = index + 1
 	end
@@ -20,13 +27,23 @@ function M.find_row(picker, rank)
 	return nil
 end
 
+function M.find_row(picker, rank)
+	return M.find_position(picker, rank)
+end
+
 function M.select(picker, rank)
-	local row = M.find_row(picker, rank)
+	local row, column, entry = M.find_position(picker, rank)
 	if row == nil then
 		return false
 	end
 
+	if column and entry then
+		entry.wrd_grid.state.activate(entry, column)
+	end
 	picker:set_selection(row)
+	if column and entry.wrd_grid.state.refresh then
+		entry.wrd_grid.state.refresh()
+	end
 	return true
 end
 

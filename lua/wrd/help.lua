@@ -69,6 +69,7 @@ function M.build(picker, opts)
 	local filter = "All"
 	local capabilities = {
 		refinement = not method_picker and picker and picker._wrd_refinement ~= nil,
+		grid = not method_picker and picker and picker._wrd_grid ~= nil,
 		rank_jump = not method_picker
 			and (opts.capabilities or {}).rank_jump == true
 			and (opts.rank_jump or {}).enabled ~= false,
@@ -123,6 +124,16 @@ function M.build(picker, opts)
 		vim.list_extend(lines, {
 			"  0-9                build an original-rank jump",
 			"  Enter              resolve a pending rank immediately",
+		})
+	end
+	if capabilities.grid then
+		local grid_mappings = (((opts.picker or {}).grid or {}).mappings or {})
+		vim.list_extend(lines, {
+			"",
+			"Grid navigation",
+			string.format("  %-18s move to the cell on the left", grid_mappings.left or "unmapped"),
+			string.format("  %-18s move to the cell on the right", grid_mappings.right or "unmapped"),
+			"  ↑/↓                move within the active grid column",
 		})
 	end
 

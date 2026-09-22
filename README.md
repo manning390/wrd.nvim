@@ -88,6 +88,7 @@ These are the default values, which you can override:
         delay_ms = 600, -- Wait briefly for another digit before jumping
     },
     picker = {
+        presentation = "list", -- Set to "grid" to try the opt-in prototype
         layout_strategy = "horizontal", -- Telescope name for side-by-side panes
         layout_config = {
             width = 0.95,
@@ -98,6 +99,17 @@ These are the default values, which you can override:
             },
         },
         show_part_of_speech = true, -- Set false for an even narrower word column
+        grid = {
+            columns = 5, -- Maximum; narrows automatically with the results pane
+            cell_width = 18,
+            separator = " │ ",
+            preview_width = 0.4,
+            show_part_of_speech = false,
+            mappings = {
+                left = "<C-Left>",
+                right = "<C-Right>",
+            },
+        },
     },
     -- Follows Telescope's mapping format
     mappings = {
@@ -210,6 +222,31 @@ require('wrd').setup({
 Set `picker.show_part_of_speech = false` to omit labels such as `[n,adj]` from
 result rows. Ranks remain visible because they are both navigation targets and
 stable result identities.
+
+#### Experimental word grid
+
+Set `picker.presentation = "grid"` to try the opt-in multi-column prototype.
+It packs results down columns in relevance order, matching OneLook's reading
+direction. The configured five columns are a maximum: Wrd reduces the count
+when the results pane is too narrow, and recalculates it after a resize.
+
+```lua
+require('wrd').setup({
+    picker = {
+        presentation = 'grid',
+    },
+})
+```
+
+Use `<C-Left>` and `<C-Right>` to change the active cell and the ordinary
+Telescope up/down mappings to change rows. The `›` marker identifies the active
+column. The preview, Enter, `/`, `<C-y>`, and numeric rank navigation operate on
+the active cell. Fuzzy input filters individual words before the matches are
+repacked, so unrelated cells are not retained merely because another word in
+their original row matched. `<C-j>` applies the POS filter before repacking.
+
+This remains experimental while its navigation, resizing, and terminal key
+compatibility are evaluated. The native list remains the default.
 
 ### Selection and copying
 

@@ -14,7 +14,20 @@ local preview = require("wrd.preview")
 local M = {}
 local preview_namespace = vim.api.nvim_create_namespace("wrd_preview")
 
+function M.word_layout(opts)
+	local configured = (opts or {}).picker or {}
+	return {
+		layout_strategy = configured.layout_strategy or "horizontal",
+		layout_config = configured.layout_config or {
+			width = 0.95,
+			height = 0.95,
+			horizontal = { preview_width = 0.55, preview_cutoff = 100 },
+		},
+	}
+end
+
 function M.word_picker(data, prompt, opts)
+	local layout = M.word_layout(opts)
 	local highest_rank = 0
 	for _, result in ipairs(data) do
 		highest_rank = math.max(highest_rank, result.rank or 0)
@@ -31,13 +44,9 @@ function M.word_picker(data, prompt, opts)
 	pickers
 		.new(opts, {
 			prompt_title = prompt,
-			layout_strategy = "horizontal",
+			layout_strategy = layout.layout_strategy,
 			sorting_strategy = "ascending",
-			layout_config = {
-				height = 0.9,
-				width = 0.9,
-				horizontal = { preview_width = 0.6 },
-			},
+			layout_config = layout.layout_config,
 			finder = finders.new_table({
 				results = data,
 				entry_maker = make_entry,

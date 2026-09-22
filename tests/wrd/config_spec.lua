@@ -14,6 +14,12 @@ describe("wrd configuration", function()
 		assert.is_true(values.commands)
 		assert.is_true(values.rank_jump.enabled)
 		assert.are.equal(600, values.rank_jump.delay_ms)
+		assert.are.equal("horizontal", values.picker.layout_strategy)
+		assert.are.equal(0.95, values.picker.layout_config.width)
+		assert.are.equal(0.95, values.picker.layout_config.height)
+		assert.are.equal(0.55, values.picker.layout_config.horizontal.preview_width)
+		assert.are.equal(100, values.picker.layout_config.horizontal.preview_cutoff)
+		assert.is_true(values.picker.show_part_of_speech)
 		assert.are.equal("function", type(values.mappings.i["<C-e>"]))
 		assert.are.equal("function", type(values.mappings.i["<C-j>"]))
 		assert.are.equal("function", type(values.mappings.i["<C-y>"]))
@@ -52,10 +58,12 @@ describe("wrd configuration", function()
 		local first = config.defaults()
 		first.mappings.i["/"] = nil
 		first.rank_jump.enabled = false
+		first.picker.layout_config.width = 0.5
 
 		local second = config.defaults()
 
 		assert.are.equal("function", type(second.mappings.i["/"]))
 		assert.is_true(second.rank_jump.enabled)
+		assert.are.equal(0.95, second.picker.layout_config.width)
 	end)
 end)

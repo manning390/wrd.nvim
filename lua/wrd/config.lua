@@ -13,6 +13,18 @@ local function defaults()
 			enabled = true,
 			delay_ms = 600,
 		},
+		picker = {
+			layout_strategy = "horizontal",
+			layout_config = {
+				width = 0.95,
+				height = 0.95,
+				horizontal = {
+					preview_width = 0.55,
+					preview_cutoff = 100,
+				},
+			},
+			show_part_of_speech = true,
+		},
 		mappings = {
 			i = {
 				["<C-e>"] = actions.wrd_change_word,

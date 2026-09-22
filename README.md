@@ -87,6 +87,18 @@ These are the default values, which you can override:
         enabled = true, -- Treat digits as result ranks instead of fuzzy-search text
         delay_ms = 600, -- Wait briefly for another digit before jumping
     },
+    picker = {
+        layout_strategy = "horizontal", -- Telescope name for side-by-side panes
+        layout_config = {
+            width = 0.95,
+            height = 0.95,
+            horizontal = {
+                preview_width = 0.55,
+                preview_cutoff = 100, -- Hide preview below this editor width
+            },
+        },
+        show_part_of_speech = true, -- Set false for an even narrower word column
+    },
     -- Follows Telescope's mapping format
     mappings = {
         i = {
@@ -173,6 +185,31 @@ configuration is applied. The overlay deliberately leaves focus in Telescope;
 press `<F1>` again to close it. Closing the picker also removes the overlay.
 Telescope's generic mapping help remains available separately through `<C-/>`
 or `?` in normal mode.
+
+### Picker layout and density
+
+The default picker uses 95% of the editor width and height. Telescope calls its
+side-by-side results-and-preview strategy `horizontal`: ranked words remain in
+the left pane and the larger definition preview stays on the right. Below 100
+editor columns, Telescope hides the preview so the word list remains usable.
+
+`picker.layout_strategy` and `picker.layout_config` are passed to Telescope, so
+you can use its standard layout choices. For example, to give definitions more
+space while retaining side-by-side panes:
+
+```lua
+require('wrd').setup({
+    picker = {
+        layout_config = {
+            horizontal = { preview_width = 0.65 },
+        },
+    },
+})
+```
+
+Set `picker.show_part_of_speech = false` to omit labels such as `[n,adj]` from
+result rows. Ranks remain visible because they are both navigation targets and
+stable result identities.
 
 ### Selection and copying
 

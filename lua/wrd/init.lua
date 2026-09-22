@@ -60,6 +60,9 @@ function wrd.run(opts)
 	if opts.rank_jump == nil then
 		opts.rank_jump = current.rank_jump
 	end
+	if opts.picker == nil then
+		opts.picker = current.picker
+	end
 
 	-- Set our prompt
 	local prompt = opts.prompt or opts.word

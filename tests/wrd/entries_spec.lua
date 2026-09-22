@@ -33,4 +33,11 @@ describe("normalized Telescope entries", function()
 			})
 		)
 	end)
+
+	it("can hide part-of-speech decoration for a denser result column", function()
+		assert.are.equal(
+			"  6. parmesan",
+			entries.display(result, { picker = { show_part_of_speech = false } })
+		)
+	end)
 end)

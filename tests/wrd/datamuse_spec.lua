@@ -15,13 +15,18 @@ describe("Datamuse client", function()
 		assert.are.equal(25, query.max)
 	end)
 
-	it("exposes normalized results without changing the legacy result path", function()
+	it("normalizes provider data into the public result contract", function()
 		local lines = vim.fn.readfile("tests/fixtures/datamuse/cheese.json")
 		local raw = vim.json.decode(table.concat(lines, "\n"))
 		local entries = datamuse.normalize(raw)
 
 		assert.are.equal(#raw, #entries)
-		assert.are.equal(raw[1].word, datamuse.entry_maker(raw[1]).display)
 		assert.are.equal(raw[1].word, entries[1].word)
+		assert.are.same({ "adjective" }, entries[3].parts_of_speech)
+		assert.are.same({
+			part_of_speech = "noun",
+			text = "(India) Dahi.",
+		}, entries[4].definitions[2])
+		assert.are.equal(raw[4], entries[4].raw)
 	end)
 end)

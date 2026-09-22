@@ -21,19 +21,11 @@ function M.word_picker(data, prompt, opts)
 	end
 
 	local function make_entry(entry)
-		if opts._wrd_normalized then
-			return entries.make(entry, opts)
-		end
-
-		return vim.tbl_deep_extend("force", { wrd = { opts = opts } }, opts.client.entry_maker(entry))
+		return entries.make(entry, opts)
 	end
 
 	local function preview_lines(entry)
-		if opts._wrd_normalized then
-			return preview.format_result(entry.value)
-		end
-
-		return preview.lines(opts.client.previewer(entry))
+		return preview.format_result(entry.value)
 	end
 
 	pickers
@@ -63,17 +55,17 @@ function M.word_picker(data, prompt, opts)
 					local lines = preview_lines(entry)
 					vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
 					vim.api.nvim_buf_clear_namespace(self.state.bufnr, preview_namespace, 0, -1)
-					if opts._wrd_normalized then
-						vim.api.nvim_buf_add_highlight(self.state.bufnr, preview_namespace, "Title", 0, 0, -1)
-					end
+					vim.api.nvim_buf_add_highlight(self.state.bufnr, preview_namespace, "Title", 0, 0, -1)
 				end,
 				title = "Definition",
 			}),
 			attach_mappings = function(prompt_bufnr, map)
 				local jump
 				picker_help.attach(prompt_bufnr, opts)
-				if opts._wrd_normalized then
+				if (opts.capabilities or {}).parts_of_speech then
 					picker_refinement.attach(prompt_bufnr, data, make_entry)
+				end
+				if (opts.capabilities or {}).rank_jump then
 					jump = picker_rank_jump.attach(
 						prompt_bufnr,
 						map,

@@ -28,7 +28,7 @@ describe("help model", function()
 				method_descriptions = { means_like = "words with a similar meaning" },
 			},
 			rank_jump = { enabled = true },
-			_wrd_normalized = true,
+			capabilities = { parts_of_speech = true, rank_jump = true },
 			target = { kind = "word" },
 			mappings = {
 				i = {
@@ -51,6 +51,16 @@ describe("help model", function()
 		local lines = help.build(nil, { rank_jump = { enabled = false } })
 
 		assert.is_false(contains(lines, "build an original-rank jump"))
+	end)
+
+	it("does not advertise part-of-speech controls for clients without that metadata", function()
+		local lines = help.build({}, {
+			capabilities = { rank_jump = true, parts_of_speech = false },
+			mappings = { i = { ["<C-j>"] = actions.wrd_cycle_part_of_speech } },
+		})
+
+		assert.is_false(contains(lines, "cycle part-of-speech filter"))
+		assert.is_true(contains(lines, "build an original-rank jump"))
 	end)
 
 	it("describes method selection without advertising word-picker actions", function()

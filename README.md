@@ -200,6 +200,43 @@ mode:
 vim.keymap.set('x', 'z/', require('wrd').run, { desc = 'Wrd: Replace selection' })
 ```
 
+### Custom clients
+
+Custom providers use the same ranked picker, previews, navigation, and
+selection behavior as Datamuse. A client fetches its native response and
+implements `normalize(response)` to return provider-independent results. At a
+minimum, each normalized result contains a non-empty `word`; rank, score,
+part-of-speech metadata, definitions, provenance, origin, concept, and raw
+provider metadata are optional.
+
+You can pass a client directly without placing it under Wrd's module namespace:
+
+```lua
+require('wrd').setup({
+    default_method = 'lookup',
+    client = {
+        key = 'my_dictionary',
+        available_methods = { lookup = 'Lookup' },
+        lookup = function(word)
+            return my_dictionary.lookup(word)
+        end,
+        normalize = function(response)
+            return vim.tbl_map(function(item)
+                return {
+                    word = item.term,
+                    definitions = { { text = item.definition } },
+                    raw = item,
+                }
+            end, response.items)
+        end,
+    },
+})
+```
+
+Wrd assigns missing ranks from provider order. Part-of-speech filtering is
+shown only when the normalized data provides that metadata. See the complete
+[client contract](lua/wrd/clients/README.md) for validation and error semantics.
+
 ## Development
 
 Run the offline test suite from the repository root:

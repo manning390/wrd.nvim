@@ -2,21 +2,6 @@ local M = {}
 
 M.empty_message = "No definition available."
 
-function M.lines(value)
-	if type(value) == "string" then
-		if value == "" then
-			return { M.empty_message }
-		end
-		return vim.split(value, "\n", { plain = true })
-	end
-
-	if type(value) == "table" and #value > 0 then
-		return value
-	end
-
-	return { M.empty_message }
-end
-
 function M.format_result(result)
 	local lines = { result.word .. ":", "" }
 

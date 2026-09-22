@@ -1,22 +1,6 @@
 local preview = require("wrd.preview")
 
-describe("preview line coercion", function()
-	it("preserves a non-empty list of lines", function()
-		local lines = { "first", "second" }
-
-		assert.are.equal(lines, preview.lines(lines))
-	end)
-
-	it("splits a string into lines for legacy clients", function()
-		assert.are.same({ "first", "second" }, preview.lines("first\nsecond"))
-	end)
-
-	it("shows a useful fallback for missing definitions", function()
-		assert.are.same({ "No definition available." }, preview.lines(nil))
-		assert.are.same({ "No definition available." }, preview.lines({}))
-		assert.are.same({ "No definition available." }, preview.lines(""))
-	end)
-
+describe("normalized result previews", function()
 	it("formats a normalized result like a definition popover", function()
 		assert.are.same(
 			{

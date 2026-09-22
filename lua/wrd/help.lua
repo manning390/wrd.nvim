@@ -69,7 +69,9 @@ function M.build(picker, opts)
 	local filter = "All"
 	local capabilities = {
 		refinement = not method_picker and picker and picker._wrd_refinement ~= nil,
-		rank_jump = not method_picker and opts._wrd_normalized and (opts.rank_jump or {}).enabled ~= false,
+		rank_jump = not method_picker
+			and (opts.capabilities or {}).rank_jump == true
+			and (opts.rank_jump or {}).enabled ~= false,
 	}
 	if capabilities.refinement then
 		filter = refinement.label(picker._wrd_refinement.current()) or picker._wrd_refinement.current()

@@ -1,3 +1,5 @@
+local client_contract = require("wrd.client")
+
 local M = {}
 
 local function load_client(client_key)
@@ -6,7 +8,7 @@ local function load_client(client_key)
 		error(string.format("Wrd Error: Client '%s' is not available", client_key))
 	end
 
-	return client
+	return client_contract.validate(client)
 end
 
 function M.attach_client(opts, config)
@@ -14,11 +16,13 @@ function M.attach_client(opts, config)
 	config = config or {}
 
 	if opts.client then
+		client_contract.validate(opts.client)
+		opts.client_key = opts.client_key or opts.client.key
 		return opts
 	end
 
 	if config.client then
-		opts.client = config.client
+		opts.client = client_contract.validate(config.client)
 		opts.client_key = opts.client_key or config.client_key or config.client.key
 		return opts
 	end
@@ -46,7 +50,16 @@ function M.fetch(word, method, client)
 		error(string.format("Wrd Error: Client '%s' does not implement method '%s'.", client.key or "unknown", method))
 	end
 
-	return client[method](word)
+	local ok, response = pcall(client[method], word)
+	if not ok then
+		error(string.format("Wrd Error: Client '%s' method '%s' failed: %s", client.key or "unknown", method, response))
+	end
+
+	return response
+end
+
+function M.normalize(client, response)
+	return client_contract.normalize(client, response)
 end
 
 return M

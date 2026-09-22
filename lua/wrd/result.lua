@@ -37,29 +37,6 @@ function M.normalize_part_of_speech(value)
 	return part_of_speech_aliases[value]
 end
 
-function M.parse_definition(value)
-	if type(value) ~= "string" then
-		return nil
-	end
-
-	local prefix, text = value:match("^([^\t]+)\t(.*)$")
-	local part_of_speech = M.normalize_part_of_speech(prefix)
-
-	if not part_of_speech then
-		text = value
-	end
-
-	text = trim(text)
-	if text == "" then
-		return nil
-	end
-
-	return {
-		part_of_speech = part_of_speech,
-		text = text,
-	}
-end
-
 function M.new(fields)
 	assert(type(fields) == "table", "result fields must be a table")
 	assert(type(fields.word) == "string" and fields.word ~= "", "result word must be a non-empty string")
@@ -70,51 +47,84 @@ function M.new(fields)
 		score = fields.score,
 		parts_of_speech = fields.parts_of_speech or {},
 		definitions = fields.definitions or {},
+		provenance = fields.provenance,
+		origin = fields.origin,
+		concept = fields.concept,
 		raw = fields.raw,
 	}
 end
 
-function M.from_datamuse(entry, rank)
-	if type(entry) ~= "table" or type(entry.word) ~= "string" or entry.word == "" then
+local function normalize_definition(value)
+	if type(value) ~= "table" or type(value.text) ~= "string" or trim(value.text) == "" then
 		return nil
 	end
 
-	local parts_of_speech = {}
-	local seen_parts_of_speech = {}
-	for _, tag in ipairs(entry.tags or {}) do
-		add_unique(parts_of_speech, seen_parts_of_speech, M.normalize_part_of_speech(tag))
-	end
-
-	local definitions = {}
-	for _, value in ipairs(entry.defs or {}) do
-		local definition = M.parse_definition(value)
-		if definition then
-			table.insert(definitions, definition)
-			add_unique(parts_of_speech, seen_parts_of_speech, definition.part_of_speech)
-		end
-	end
-
-	return M.new({
-		word = entry.word,
-		rank = rank,
-		score = entry.score,
-		parts_of_speech = parts_of_speech,
-		definitions = definitions,
-		raw = entry,
-	})
+	return {
+		text = trim(value.text),
+		part_of_speech = M.normalize_part_of_speech(value.part_of_speech),
+		source = value.source,
+	}
 end
 
-function M.normalize_datamuse(entries)
-	local normalized = {}
+local function next_rank(preferred, used, fallback)
+	if type(preferred) == "number" and preferred > 0 and preferred % 1 == 0 and not used[preferred] then
+		used[preferred] = true
+		return preferred
+	end
+	while used[fallback] do
+		fallback = fallback + 1
+	end
+	used[fallback] = true
+	return fallback
+end
 
-	for rank, entry in ipairs(entries or {}) do
-		local item = M.from_datamuse(entry, rank)
-		if item then
-			table.insert(normalized, item)
+function M.prepare(values)
+	local normalized = {}
+	local issues = {}
+	local used_ranks = {}
+	local has_parts_of_speech = false
+
+	for index, value in ipairs(values or {}) do
+		if type(value) ~= "table" then
+			table.insert(issues, { index = index, reason = "expected a result table" })
+		elseif type(value.word) ~= "string" or trim(value.word) == "" then
+			table.insert(issues, { index = index, reason = "word must be a non-empty string" })
+		else
+			local parts_of_speech = {}
+			local seen_parts_of_speech = {}
+			local supplied_parts = type(value.parts_of_speech) == "table" and value.parts_of_speech or {}
+			for _, part in ipairs(supplied_parts) do
+				add_unique(parts_of_speech, seen_parts_of_speech, M.normalize_part_of_speech(part))
+			end
+
+			local definitions = {}
+			local supplied_definitions = type(value.definitions) == "table" and value.definitions or {}
+			for _, definition in ipairs(supplied_definitions) do
+				local item = normalize_definition(definition)
+				if item then
+					table.insert(definitions, item)
+					add_unique(parts_of_speech, seen_parts_of_speech, item.part_of_speech)
+				end
+			end
+
+			if #parts_of_speech > 0 then
+				has_parts_of_speech = true
+			end
+			table.insert(normalized, M.new({
+				word = trim(value.word),
+				rank = next_rank(value.rank, used_ranks, index),
+				score = value.score,
+				parts_of_speech = parts_of_speech,
+				definitions = definitions,
+				provenance = value.provenance,
+				origin = value.origin,
+				concept = value.concept,
+				raw = value.raw,
+			}))
 		end
 	end
 
-	return normalized
+	return normalized, issues, { parts_of_speech = has_parts_of_speech }
 end
 
 function M.filter_by_part_of_speech(entries, part_of_speech)

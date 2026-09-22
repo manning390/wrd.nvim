@@ -9,15 +9,25 @@ describe("wrd query orchestration", function()
 	end)
 
 	it("preserves a per-call custom client", function()
-		local client = { key = "custom" }
+		local client = {
+			key = "custom",
+			available_methods = { lookup = "Lookup" },
+			lookup = function() end,
+			normalize = function() return {} end,
+		}
 		local opts = query.attach_client({ client = client }, { client_key = "datamuse" })
 
 		assert.are.equal(client, opts.client)
-		assert.is_nil(opts.client_key)
+		assert.are.equal("custom", opts.client_key)
 	end)
 
 	it("uses a custom client supplied through setup", function()
-		local client = { key = "custom" }
+		local client = {
+			key = "custom",
+			available_methods = { lookup = "Lookup" },
+			lookup = function() end,
+			normalize = function() return {} end,
+		}
 		local opts = query.attach_client({}, { client = client, client_key = "configured" })
 
 		assert.are.equal(client, opts.client)
@@ -28,6 +38,7 @@ describe("wrd query orchestration", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
+			normalize = function() return {} end,
 			lookup = function(word)
 				return word .. " result"
 			end,
@@ -40,6 +51,7 @@ describe("wrd query orchestration", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
+			normalize = function() return {} end,
 			lookup = function()
 				error("should not run")
 			end,
@@ -63,5 +75,18 @@ describe("wrd query orchestration", function()
 		assert.has_error(function()
 			query.fetch("query", "advertised", client)
 		end, "Wrd Error: Client 'fake' does not implement method 'advertised'.")
+	end)
+
+	it("propagates provider failures", function()
+		local client = {
+			key = "fake",
+			available_methods = { lookup = "Lookup" },
+			lookup = function() error("provider unavailable") end,
+		}
+
+		local ok, message = pcall(query.fetch, "query", "lookup", client)
+		assert.is_false(ok)
+		assert.is_truthy(message:find("Wrd Error: Client 'fake' method 'lookup' failed", 1, true))
+		assert.is_truthy(message:find("provider unavailable", 1, true))
 	end)
 end)

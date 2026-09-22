@@ -39,9 +39,7 @@ function wrd.run(opts)
 	end
 	local current = config.get()
 
-	if not opts.client then
-		opts = wrd._make_client(opts)
-	end
+	opts = wrd._make_client(opts)
 
 	if not opts.method or opts.method == "" then
 		local default_method = current.default_method
@@ -72,23 +70,19 @@ function wrd.run(opts)
 		end
 	end
 
-	local data = wrd._fetch(opts.word, opts.method, opts.client)
-	if data == nil then
+	local response = wrd._fetch(opts.word, opts.method, opts.client)
+	if response == nil then
 		return
 	end
+	local data, capabilities, issues = query.normalize(opts.client, response)
 	if vim.tbl_isempty(data) then
 		local method_label = opts.client.available_methods[opts.method] or opts.method
-		vim.notify(string.format("Wrd: No %s results for '%s'", method_label, opts.word), vim.log.levels.INFO)
+		local message = #issues > 0 and string.format("Wrd: No usable results for '%s'", opts.word)
+			or string.format("Wrd: No %s results for '%s'", method_label, opts.word)
+		vim.notify(message, vim.log.levels.INFO)
 		return
 	end
-	if type(opts.client.normalize) == "function" then
-		data = opts.client.normalize(data)
-		opts._wrd_normalized = true
-		if vim.tbl_isempty(data) then
-			vim.notify(string.format("Wrd: No usable results for '%s'", opts.word), vim.log.levels.INFO)
-			return
-		end
-	end
+	opts.capabilities = capabilities
 
 	return pickers.word_picker(data, prompt, opts)
 end
@@ -105,9 +99,7 @@ function wrd.run_methods(opts)
 	opts = opts or {}
 	local current = config.get()
 
-	if not opts.client then
-		opts = wrd._make_client(opts)
-	end
+	opts = wrd._make_client(opts)
 	if not opts.mappings then
 		opts.mappings = current.mappings
 	end

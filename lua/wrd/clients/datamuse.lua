@@ -32,21 +32,54 @@ local Muse = {
 	},
 }
 
-function Muse.entry_maker(entry)
-	return {
-		value = entry,
-		ordinal = entry.word,
-		display = entry.word,
-		wrd = { word = entry.word },
-	}
-end
+local function parse_definition(value)
+	if type(value) ~= "string" then
+		return nil
+	end
 
-function Muse.previewer(entry)
-	return entry.value.defs
+	local prefix, text = value:match("^([^\t]+)\t(.*)$")
+	local part_of_speech = result.normalize_part_of_speech(prefix)
+	if not part_of_speech then
+		text = value
+	end
+	text = vim.trim(text)
+	if text == "" then
+		return nil
+	end
+
+	return { part_of_speech = part_of_speech, text = text }
 end
 
 function Muse.normalize(entries)
-	return result.normalize_datamuse(entries)
+	local normalized = {}
+	for _, entry in ipairs(entries or {}) do
+		if type(entry) == "table" then
+			local parts_of_speech = {}
+			for _, tag in ipairs(entry.tags or {}) do
+				local part = result.normalize_part_of_speech(tag)
+				if part and not vim.tbl_contains(parts_of_speech, part) then
+					table.insert(parts_of_speech, part)
+				end
+			end
+
+			local definitions = {}
+			for _, value in ipairs(entry.defs or {}) do
+				local definition = parse_definition(value)
+				if definition then
+					table.insert(definitions, definition)
+				end
+			end
+
+			table.insert(normalized, {
+				word = entry.word,
+				score = entry.score,
+				parts_of_speech = parts_of_speech,
+				definitions = definitions,
+				raw = entry,
+			})
+		end
+	end
+	return normalized
 end
 
 function Muse.build_query(query)

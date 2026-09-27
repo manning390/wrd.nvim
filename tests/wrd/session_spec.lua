@@ -23,7 +23,9 @@ describe("picker session", function()
 				method_options = opts
 				received_lifecycle = transition
 			end,
-			reopen = function(state) reopened_state = state end,
+			reopen = function(state)
+				reopened_state = state
+			end,
 		})
 
 		assert.are.equal("cheese", state.query_word)
@@ -51,7 +53,9 @@ describe("picker session", function()
 		assert.are.equal(snapshot, reopened_state)
 
 		local received_definition
-		state.on_query_definition(function(value) received_definition = value end)
+		state.on_query_definition(function(value)
+			received_definition = value
+		end)
 		local definition = { status = "ok", result = { word = "cheese" } }
 		state.set_query_definition(definition)
 		assert.are.equal(definition, state.query_definition)

@@ -372,6 +372,15 @@ Run the offline test suite from the repository root:
 ./scripts/test
 ```
 
+Run formatting validation and the complete test suite together with:
+
+```sh
+./scripts/check
+```
+
+The combined check requires [StyLua](https://github.com/JohnnyMorganz/StyLua).
+The repository configuration targets LuaJIT, matching Neovim's Lua runtime.
+
 The test harness looks for Plenary and Telescope in the standard `lazy.nvim`
 data directory. Set `PLENARY_PATH` or `TELESCOPE_PATH` if either dependency is
 installed elsewhere.

@@ -24,17 +24,27 @@ describe("wrd workflow transitions", function()
 		local restored = false
 		local replaced = false
 		local notification
-		vim.notify = function(message, level) notification = { message, level } end
+		vim.notify = function(message, level)
+			notification = { message, level }
+		end
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() error("offline") end,
-			normalize = function(values) return values end,
+			lookup = function()
+				error("offline")
+			end,
+			normalize = function(values)
+				return values
+			end,
 		}
 
 		workflow.new().run({ word = "cheese", method = "lookup", client = client, target = {} }, {
-			before_open = function() replaced = true end,
-			restore = function() restored = true end,
+			before_open = function()
+				replaced = true
+			end,
+			restore = function()
+				restored = true
+			end,
 		})
 
 		assert.is_true(restored)
@@ -47,8 +57,12 @@ describe("wrd workflow transitions", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			lookup = function(word) return { { word = word .. "ish" } } end,
-			normalize = function(values) return values end,
+			lookup = function(word)
+				return { { word = word .. "ish" } }
+			end,
+			normalize = function(values)
+				return values
+			end,
 		}
 		pickers.word_picker = function()
 			table.insert(events, "open")
@@ -56,8 +70,12 @@ describe("wrd workflow transitions", function()
 		end
 
 		local opened = workflow.new().run({ word = "green", method = "lookup", client = client, target = {} }, {
-			before_open = function() table.insert(events, "close") end,
-			restore = function() table.insert(events, "restore") end,
+			before_open = function()
+				table.insert(events, "close")
+			end,
+			restore = function()
+				table.insert(events, "restore")
+			end,
 		})
 
 		assert.are.equal("opened", opened)
@@ -70,12 +88,18 @@ describe("wrd workflow transitions", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() return {} end,
-			normalize = function(values) return values end,
+			lookup = function()
+				return {}
+			end,
+			normalize = function(values)
+				return values
+			end,
 		}
 
 		workflow.new().run({ word = "missing", method = "lookup", client = client, target = {} }, {
-			restore = function() restored = true end,
+			restore = function()
+				restored = true
+			end,
 		})
 
 		assert.is_true(restored)
@@ -87,8 +111,12 @@ describe("wrd workflow transitions", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() return {} end,
-			normalize = function(values) return values end,
+			lookup = function()
+				return {}
+			end,
+			normalize = function(values)
+				return values
+			end,
 		}
 		pickers.method_picker = function(_, _, _, on_close)
 			received_on_close = on_close
@@ -106,8 +134,12 @@ describe("wrd workflow transitions", function()
 		local client = {
 			key = "dictionary",
 			available_methods = { lookup = "Lookup" },
-			lookup = function(word) return { { word = word .. "ish" } } end,
-			normalize = function(values) return values end,
+			lookup = function(word)
+				return { { word = word .. "ish" } }
+			end,
+			normalize = function(values)
+				return values
+			end,
 			describe = function(_, callback)
 				table.insert(events, "describe")
 				complete = callback

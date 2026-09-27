@@ -16,7 +16,9 @@ describe("public client contract", function()
 			key = "dictionary",
 			name = "Example Dictionary",
 			available_methods = { define = "Define" },
-			define = function(word) return { terms = { word } } end,
+			define = function(word)
+				return { terms = { word } }
+			end,
 			normalize = function(response)
 				return vim.tbl_map(function(word)
 					return { word = word, definitions = { { text = "A custom definition." } } }
@@ -35,12 +37,18 @@ describe("public client contract", function()
 
 	it("reports malformed provider records with the client and index", function()
 		local notification
-		vim.notify = function(message, level) notification = { message, level } end
+		vim.notify = function(message, level)
+			notification = { message, level }
+		end
 		local client = {
 			key = "custom",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() return {} end,
-			normalize = function() return { { label = "missing word" } } end,
+			lookup = function()
+				return {}
+			end,
+			normalize = function()
+				return { { label = "missing word" } }
+			end,
 		}
 
 		local results = client_contract.normalize(client, {})
@@ -63,7 +71,9 @@ describe("public client contract", function()
 			client_contract.validate({
 				key = "custom",
 				available_methods = { lookup = "Lookup" },
-				normalize = function() return {} end,
+				normalize = function()
+					return {}
+				end,
 			})
 		end, "Wrd Error: Client 'custom' does not implement method 'lookup'.")
 	end)
@@ -74,7 +84,9 @@ describe("public client contract", function()
 				key = "custom",
 				available_methods = { lookup = "Lookup" },
 				lookup = function() end,
-				normalize = function() return {} end,
+				normalize = function()
+					return {}
+				end,
 				capabilities = { grid = true },
 			})
 		end, "Wrd Error: Client 'custom' advertises unsupported capability 'grid'")
@@ -84,8 +96,12 @@ describe("public client contract", function()
 		local client = {
 			key = "broken",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() return {} end,
-			normalize = function() error("bad response") end,
+			lookup = function()
+				return {}
+			end,
+			normalize = function()
+				error("bad response")
+			end,
 		}
 
 		local ok, message = pcall(client_contract.normalize, client, {})
@@ -97,8 +113,12 @@ describe("public client contract", function()
 		local client = {
 			key = "dictionary",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() return {} end,
-			normalize = function() return {} end,
+			lookup = function()
+				return {}
+			end,
+			normalize = function()
+				return {}
+			end,
 			describe = function() end,
 		}
 
@@ -109,8 +129,12 @@ describe("public client contract", function()
 			client_contract.validate({
 				key = "dictionary",
 				available_methods = { lookup = "Lookup" },
-				lookup = function() return {} end,
-				normalize = function() return {} end,
+				lookup = function()
+					return {}
+				end,
+				normalize = function()
+					return {}
+				end,
 				capabilities = { describe = true },
 			})
 		end, "Wrd Error: Client 'dictionary' advertises describe but does not implement it")

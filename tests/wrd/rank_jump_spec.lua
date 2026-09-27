@@ -52,8 +52,12 @@ describe("rank jump", function()
 		local active_column
 		local refreshed = false
 		local state = {
-			activate = function(_, column) active_column = column end,
-			refresh = function() refreshed = true end,
+			activate = function(_, column)
+				active_column = column
+			end,
+			refresh = function()
+				refreshed = true
+			end,
 		}
 		local picker, selected_row = picker_with({
 			{

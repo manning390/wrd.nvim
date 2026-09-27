@@ -71,7 +71,9 @@ describe("Datamuse client", function()
 			callback(nil, { { word = "cheesed", defs = { "v\tCovered with cheese." } } })
 		end
 
-		datamuse.describe("cheese", function(_, result) received_result = result end)
+		datamuse.describe("cheese", function(_, result)
+			received_result = result
+		end)
 		datamuse._query_async = original_query_async
 
 		assert.is_nil(received_result)

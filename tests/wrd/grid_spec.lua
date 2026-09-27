@@ -13,8 +13,18 @@ describe("grid presentation model", function()
 		local rows = grid.pack(results(10), 3)
 
 		assert.are.equal(4, #rows)
-		assert.are.same({ 1, 5, 9 }, vim.tbl_map(function(value) return value.rank end, rows[1].cells))
-		assert.are.same({ 4, 8 }, vim.tbl_map(function(value) return value.rank end, rows[4].cells))
+		assert.are.same(
+			{ 1, 5, 9 },
+			vim.tbl_map(function(value)
+				return value.rank
+			end, rows[1].cells)
+		)
+		assert.are.same(
+			{ 4, 8 },
+			vim.tbl_map(function(value)
+				return value.rank
+			end, rows[4].cells)
+		)
 	end)
 
 	it("adapts the column count to the available results width", function()

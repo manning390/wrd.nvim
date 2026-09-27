@@ -7,7 +7,9 @@ describe("exact-word descriptions", function()
 
 	it("reports unsupported clients without invoking transport", function()
 		local outcome
-		descriptions.request({ key = "plain" }, "cheese", function(value) outcome = value end)
+		descriptions.request({ key = "plain" }, "cheese", function(value)
+			outcome = value
+		end)
 
 		assert.are.equal("unsupported", outcome.status)
 	end)
@@ -24,8 +26,12 @@ describe("exact-word descriptions", function()
 		local first
 		local second
 
-		descriptions.request(client, "Cheese", function(value) first = value end)
-		descriptions.request(client, " cheese ", function(value) second = value end)
+		descriptions.request(client, "Cheese", function(value)
+			first = value
+		end)
+		descriptions.request(client, " cheese ", function(value)
+			second = value
+		end)
 
 		assert.are.equal(1, calls)
 		assert.are.equal("ok", first.status)
@@ -45,8 +51,12 @@ describe("exact-word descriptions", function()
 			end,
 		}
 
-		descriptions.request(client, "cheese", function(value) outcomes[1] = value end)
-		descriptions.request(client, "cheese", function(value) outcomes[2] = value end)
+		descriptions.request(client, "cheese", function(value)
+			outcomes[1] = value
+		end)
+		descriptions.request(client, "cheese", function(value)
+			outcomes[2] = value
+		end)
 		complete(nil, { word = "cheese", definitions = { { text = "Pressed milk curds." } } })
 
 		assert.are.equal(1, calls)
@@ -71,16 +81,24 @@ describe("exact-word descriptions", function()
 		local first
 		local second
 
-		descriptions.request(client, "cheese", function(value) first = value end)
-		descriptions.request(client, "cheese", function(value) second = value end)
+		descriptions.request(client, "cheese", function(value)
+			first = value
+		end)
+		descriptions.request(client, "cheese", function(value)
+			second = value
+		end)
 		assert.are.equal(1, calls)
 		assert.are.equal("empty", first.status)
 		assert.are.equal(first, second)
 
 		descriptions.clear()
 		fail = true
-		descriptions.request(client, "cheese", function(value) first = value end)
-		descriptions.request(client, "cheese", function(value) second = value end)
+		descriptions.request(client, "cheese", function(value)
+			first = value
+		end)
+		descriptions.request(client, "cheese", function(value)
+			second = value
+		end)
 		assert.are.equal(3, calls)
 		assert.are.equal("failed", first.status)
 		assert.are.equal("failed", second.status)

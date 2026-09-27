@@ -56,7 +56,13 @@ function M.validate(client)
 		end
 		for capability, enabled in pairs(client.capabilities) do
 			if capability ~= "parts_of_speech" and capability ~= "describe" then
-				error(string.format("Wrd Error: Client '%s' advertises unsupported capability '%s'", client.key, capability))
+				error(
+					string.format(
+						"Wrd Error: Client '%s' advertises unsupported capability '%s'",
+						client.key,
+						capability
+					)
+				)
 			end
 			if type(enabled) ~= "boolean" then
 				error(string.format("Wrd Error: Client '%s' capability '%s' must be boolean", client.key, capability))
@@ -97,15 +103,20 @@ function M.normalize(client, response)
 
 	local normalized, issues, inferred = result.prepare(values)
 	for _, issue in ipairs(issues) do
-		vim.notify(string.format("Wrd: Client '%s' skipped result #%d: %s", client.key, issue.index, issue.reason), vim.log.levels.WARN)
+		vim.notify(
+			string.format("Wrd: Client '%s' skipped result #%d: %s", client.key, issue.index, issue.reason),
+			vim.log.levels.WARN
+		)
 	end
 
 	local declared = client.capabilities or {}
-	return normalized, {
-		parts_of_speech = declared.parts_of_speech == true or inferred.parts_of_speech,
-		describe = declared.describe == true or type(client.describe) == "function",
-		rank_jump = true,
-	}, issues
+	return normalized,
+		{
+			parts_of_speech = declared.parts_of_speech == true or inferred.parts_of_speech,
+			describe = declared.describe == true or type(client.describe) == "function",
+			rank_jump = true,
+		},
+		issues
 end
 
 function M.normalize_description(client, word, value)

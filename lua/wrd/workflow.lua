@@ -89,7 +89,8 @@ function M.new(dependencies)
 		end
 		if outcome.status == "empty" or outcome.status == "unusable" then
 			local method_label = prepared.client.available_methods[prepared.method] or prepared.method
-			local message = outcome.status == "unusable" and string.format("Wrd: No usable results for '%s'", prepared.word)
+			local message = outcome.status == "unusable"
+					and string.format("Wrd: No usable results for '%s'", prepared.word)
 				or string.format("Wrd: No %s results for '%s'", method_label, prepared.word)
 			vim.notify(message, vim.log.levels.INFO)
 			restore(lifecycle)

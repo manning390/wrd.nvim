@@ -45,7 +45,12 @@ describe("normalized results", function()
 			{ word = "gamma", rank = 10, definitions = { { part_of_speech = "v", text = " to test " } } },
 		})
 
-		assert.are.same({ 10, 2, 4 }, vim.tbl_map(function(entry) return entry.rank end, entries))
+		assert.are.same(
+			{ 10, 2, 4 },
+			vim.tbl_map(function(entry)
+				return entry.rank
+			end, entries)
+		)
 		assert.are.same({ { index = 3, reason = "word must be a non-empty string" } }, issues)
 		assert.is_true(capabilities.parts_of_speech)
 		assert.are.same({ "verb" }, entries[3].parts_of_speech)

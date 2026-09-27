@@ -41,7 +41,9 @@ local function fuzzy_results(results, prompt)
 		return left.score > right.score
 	end)
 
-	return vim.tbl_map(function(match) return match.result end, matches)
+	return vim.tbl_map(function(match)
+		return match.result
+	end, matches)
 end
 
 function M.pack(results, columns)
@@ -78,7 +80,10 @@ function M.new(results, opts, display_opts)
 
 	function state.set_available_width(width)
 		local separator_width = vim.fn.strdisplaywidth(state.separator)
-		state.columns = math.max(1, math.min(opts.columns or 5, math.floor((width + separator_width) / (state.cell_width + separator_width))))
+		state.columns = math.max(
+			1,
+			math.min(opts.columns or 5, math.floor((width + separator_width) / (state.cell_width + separator_width)))
+		)
 		state.column = math.min(state.column, state.columns)
 		return state.columns
 	end
@@ -127,8 +132,15 @@ function M.new(results, opts, display_opts)
 
 	function state.make_entry(row)
 		local entry = {
-			ordinal = table.concat(vim.tbl_map(function(result) return result and result.word or "" end, row.cells), " "),
-			display = function() return state.display(row) end,
+			ordinal = table.concat(
+				vim.tbl_map(function(result)
+					return result and result.word or ""
+				end, row.cells),
+				" "
+			),
+			display = function()
+				return state.display(row)
+			end,
 			wrd_grid = { cells = row.cells, state = state },
 		}
 		state.activate(entry, state.column, false)

@@ -18,7 +18,12 @@ function M.open(available_methods, callback, opts, on_close)
 	pickers
 		.new(opts, {
 			prompt_title = opts.prompt_title,
-			finder = finders.new_table({ results = data, entry_maker = function(entry) return entry end }),
+			finder = finders.new_table({
+				results = data,
+				entry_maker = function(entry)
+					return entry
+				end,
+			}),
 			sorter = conf.generic_sorter(opts),
 			attach_mappings = function(prompt_bufnr, map)
 				local selected = false

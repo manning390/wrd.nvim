@@ -47,7 +47,9 @@ describe("wrd public API", function()
 		local client = {
 			key = "fake",
 			available_methods = { synonym = "Synonym" },
-			normalize = function(values) return values end,
+			normalize = function(values)
+				return values
+			end,
 			synonym = function()
 				return {}
 			end,
@@ -72,8 +74,12 @@ describe("wrd public API", function()
 		local client = {
 			key = "fake",
 			available_methods = { synonym = "Synonym" },
-			normalize = function(values) return values end,
-			synonym = function() error("service unavailable") end,
+			normalize = function(values)
+				return values
+			end,
+			synonym = function()
+				error("service unavailable")
+			end,
 		}
 
 		wrd.setup({ commands = false })
@@ -143,8 +149,12 @@ describe("wrd public API", function()
 		local client = {
 			key = "dictionary",
 			available_methods = { lookup = "Lookup" },
-			lookup = function(word) return { { word = word .. "ish" } } end,
-			normalize = function(values) return values end,
+			lookup = function(word)
+				return { { word = word .. "ish" } }
+			end,
+			normalize = function(values)
+				return values
+			end,
 		}
 
 		picker.method_picker = function(_, callback, opts)

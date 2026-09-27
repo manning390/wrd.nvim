@@ -110,17 +110,20 @@ function M.prepare(values)
 			if #parts_of_speech > 0 then
 				has_parts_of_speech = true
 			end
-			table.insert(normalized, M.new({
-				word = trim(value.word),
-				rank = next_rank(value.rank, used_ranks, index),
-				score = value.score,
-				parts_of_speech = parts_of_speech,
-				definitions = definitions,
-				provenance = value.provenance,
-				origin = value.origin,
-				concept = value.concept,
-				raw = value.raw,
-			}))
+			table.insert(
+				normalized,
+				M.new({
+					word = trim(value.word),
+					rank = next_rank(value.rank, used_ranks, index),
+					score = value.score,
+					parts_of_speech = parts_of_speech,
+					definitions = definitions,
+					provenance = value.provenance,
+					origin = value.origin,
+					concept = value.concept,
+					raw = value.raw,
+				})
+			)
 		end
 	end
 

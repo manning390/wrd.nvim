@@ -1,8 +1,12 @@
 local M = {}
 
 local factories = {
-	list = function(results, opts) return require("wrd.presentations.list").new(results, opts) end,
-	grid = function(results, opts) return require("wrd.presentations.grid").new(results, opts) end,
+	list = function(results, opts)
+		return require("wrd.presentations.list").new(results, opts)
+	end,
+	grid = function(results, opts)
+		return require("wrd.presentations.grid").new(results, opts)
+	end,
 }
 
 function M.new(results, opts)

@@ -67,7 +67,9 @@ describe("wrd picker actions", function()
 	local function attach_session(query_word, target)
 		current_picker = {
 			_wrd = {
-				restore_prompt = function(insert_mode) restored_prompt = insert_mode end,
+				restore_prompt = function(insert_mode)
+					restored_prompt = insert_mode
+				end,
 				snapshot = function(insert_mode)
 					return { prompt = "fuzzy", rank = 3, filter = "noun", insert_mode = insert_mode }
 				end,
@@ -86,7 +88,9 @@ describe("wrd picker actions", function()
 						changed_word = word
 						transition_lifecycle = lifecycle
 					end,
-					reopen = function(state) reopened_state = state end,
+					reopen = function(state)
+						reopened_state = state
+					end,
 				},
 			},
 		}
@@ -153,7 +157,9 @@ describe("wrd picker actions", function()
 	it("restores picker focus after cancelling a query-word change", function()
 		local input_callback
 		local original_input = vim.ui.input
-		vim.ui.input = function(_, callback) input_callback = callback end
+		vim.ui.input = function(_, callback)
+			input_callback = callback
+		end
 		attach_session("cheese")
 
 		wrd_actions.wrd_change_word(42)
@@ -219,11 +225,13 @@ describe("wrd picker actions", function()
 	it("exposes direct part-of-speech actions for custom mappings", function()
 		local selected_filter
 		current_picker = {
-			_wrd = { filters = {
-				refresh = function(part_of_speech)
-					selected_filter = part_of_speech
-				end,
-			} },
+			_wrd = {
+				filters = {
+					refresh = function(part_of_speech)
+						selected_filter = part_of_speech
+					end,
+				},
+			},
 		}
 
 		wrd_actions.wrd_filter_adjectives(42)

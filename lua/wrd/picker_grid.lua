@@ -5,8 +5,12 @@ local M = {}
 
 function M.finder(state)
 	return finders.new_dynamic({
-		fn = function(prompt) return state.rows(prompt) end,
-		entry_maker = function(row) return state.make_entry(row) end,
+		fn = function(prompt)
+			return state.rows(prompt)
+		end,
+		entry_maker = function(row)
+			return state.make_entry(row)
+		end,
 	})
 end
 
@@ -38,8 +42,12 @@ function M.attach(prompt_bufnr, map, state, opts, controller)
 		if not key or key == false then
 			return
 		end
-		map("i", key, function() state.move(delta) end)
-		map("n", key, function() state.move(delta) end)
+		map("i", key, function()
+			state.move(delta)
+		end)
+		map("n", key, function()
+			state.move(delta)
+		end)
 	end
 	bind(mappings.left, -1)
 	bind(mappings.right, 1)

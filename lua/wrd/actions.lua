@@ -67,7 +67,9 @@ function M.wrd_methods(prompt_bufnr)
 		local snapshot = controller.snapshot(return_to_insert)
 		actions.close(prompt_bufnr)
 		session.choose_method({
-			restore = function() session.reopen(snapshot) end,
+			restore = function()
+				session.reopen(snapshot)
+			end,
 		})
 	end
 end

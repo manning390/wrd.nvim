@@ -14,7 +14,9 @@ function M.new(results, opts)
 	function presentation.finder_for(values)
 		return finders.new_table({
 			results = values,
-			entry_maker = function(result) return entries.make(result, opts) end,
+			entry_maker = function(result)
+				return entries.make(result, opts)
+			end,
 		})
 	end
 

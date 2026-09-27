@@ -24,7 +24,9 @@ describe("wrd query orchestration", function()
 			key = "custom",
 			available_methods = { lookup = "Lookup" },
 			lookup = function() end,
-			normalize = function() return {} end,
+			normalize = function()
+				return {}
+			end,
 		}
 		local opts = query.attach_client({ client = client }, { client_key = "datamuse" })
 
@@ -37,7 +39,9 @@ describe("wrd query orchestration", function()
 			key = "custom",
 			available_methods = { lookup = "Lookup" },
 			lookup = function() end,
-			normalize = function() return {} end,
+			normalize = function()
+				return {}
+			end,
 		}
 		local opts = query.attach_client({}, { client = client, client_key = "configured" })
 
@@ -49,7 +53,9 @@ describe("wrd query orchestration", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			normalize = function() return {} end,
+			normalize = function()
+				return {}
+			end,
 			lookup = function(word)
 				return word .. " result"
 			end,
@@ -62,7 +68,9 @@ describe("wrd query orchestration", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			normalize = function() return {} end,
+			normalize = function()
+				return {}
+			end,
 			lookup = function()
 				error("should not run")
 			end,
@@ -96,7 +104,9 @@ describe("wrd query orchestration", function()
 		local client = {
 			key = "fake",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() error("provider unavailable") end,
+			lookup = function()
+				error("provider unavailable")
+			end,
 		}
 
 		local ok, message = pcall(query.fetch, "query", "lookup", client)
@@ -112,7 +122,9 @@ describe("wrd query orchestration", function()
 			lookup = function(word)
 				return word == "empty" and {} or { { definitions = {} } }
 			end,
-			normalize = function(values) return values end,
+			normalize = function(values)
+				return values
+			end,
 		}
 
 		assert.are.equal("cancelled", query.execute("", "lookup", client).status)
@@ -126,14 +138,22 @@ describe("wrd query orchestration", function()
 		local provider_failure = {
 			key = "provider",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() error("offline") end,
-			normalize = function(values) return values end,
+			lookup = function()
+				error("offline")
+			end,
+			normalize = function(values)
+				return values
+			end,
 		}
 		local normalization_failure = {
 			key = "normalizer",
 			available_methods = { lookup = "Lookup" },
-			lookup = function() return {} end,
-			normalize = function() error("bad payload") end,
+			lookup = function()
+				return {}
+			end,
+			normalize = function()
+				error("bad payload")
+			end,
 		}
 
 		local provider = query.execute("word", "lookup", provider_failure)

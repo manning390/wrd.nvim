@@ -13,7 +13,11 @@ function M.attach(prompt_bufnr, session)
 	function controller.restore_prompt(insert_mode)
 		vim.schedule(function()
 			local prompt_win = picker.prompt_win
-			if not prompt_win or not vim.api.nvim_win_is_valid(prompt_win) or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
+			if
+				not prompt_win
+				or not vim.api.nvim_win_is_valid(prompt_win)
+				or not vim.api.nvim_buf_is_valid(prompt_bufnr)
+			then
 				return
 			end
 

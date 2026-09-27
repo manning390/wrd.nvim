@@ -6,6 +6,7 @@ local DATAMUSE_API_URL = "https://api.datamuse.com/words"
 local Muse = {
 	key = "datamuse",
 	max_results = 100,
+	capabilities = { describe = true },
 	available_methods = {
 		means_like = "Means Like",
 		sounds_like = "Sounds Like",
@@ -89,6 +90,15 @@ function Muse.build_query(query)
 	})
 end
 
+function Muse.build_description_query(word)
+	return Muse.build_query({
+		sp = word,
+		qe = "sp",
+		md = "dp",
+		max = 1,
+	})
+end
+
 function Muse._query(query)
 	local resp = curl.get({
 		url = DATAMUSE_API_URL,
@@ -103,6 +113,50 @@ function Muse._query(query)
 	local data = vim.fn.json_decode(resp.body)
 
 	return data
+end
+
+function Muse._query_async(query, callback)
+	return curl.get({
+		url = DATAMUSE_API_URL,
+		query = query,
+		accept = "application/json",
+		callback = function(resp)
+			vim.schedule(function()
+				local status = tonumber(resp.status) or 0
+				if resp.exit ~= 0 or status >= 400 then
+					callback(string.format("Datamuse API call failed with status '%s'", resp.status))
+					return
+				end
+				local ok, data = pcall(vim.json.decode, resp.body)
+				if not ok then
+					callback("Datamuse returned invalid JSON: " .. tostring(data))
+					return
+				end
+				callback(nil, data)
+			end)
+		end,
+		on_error = function(error)
+			vim.schedule(function()
+				callback(error.message or tostring(error))
+			end)
+		end,
+	})
+end
+
+function Muse.describe(word, callback)
+	return Muse._query_async(Muse.build_description_query(word), function(err, data)
+		if err then
+			callback(err)
+			return
+		end
+		for _, candidate in ipairs(Muse.normalize(data)) do
+			if type(candidate.word) == "string" and candidate.word:lower() == vim.trim(word):lower() then
+				callback(nil, candidate)
+				return
+			end
+		end
+		callback(nil, nil)
+	end)
 end
 
 function Muse.means_like(word)

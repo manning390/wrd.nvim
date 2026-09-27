@@ -48,6 +48,37 @@ An empty normalized list means the query had no results. Malformed normalized
 records are skipped with a warning that names the client and record index. A
 client whose contract itself is incomplete is rejected before it is queried.
 
+## Optional exact-word descriptions
+
+A client may asynchronously describe the current query word. The callback uses
+`callback(error, result)`, where `result` already follows the normalized result
+shape below. Return `nil` for the result when no exact definition is available.
+Wrd rejects non-exact word matches and caches successful and empty lookups by
+client instance and normalized word.
+
+```lua
+client.capabilities = { describe = true }
+
+function client.describe(word, callback)
+    example_api.describe_async(word, function(error, response)
+        if error then
+            callback(error)
+            return
+        end
+        callback(nil, response and {
+            word = response.term,
+            definitions = vim.tbl_map(function(text)
+                return { text = text }
+            end, response.definitions or {}),
+            provenance = response.source,
+        } or nil)
+    end)
+end
+```
+
+Advertising `describe` is optional when the function is present; Wrd infers the
+capability in that case. Clients without it keep the selected-result preview.
+
 ## Normalized result
 
 Only `word` is required:

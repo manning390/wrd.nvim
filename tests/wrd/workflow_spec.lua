@@ -98,4 +98,32 @@ describe("wrd workflow transitions", function()
 
 		assert.are.equal(restore, received_on_close)
 	end)
+
+	it("opens the picker before loading an optional query definition", function()
+		local events = {}
+		local complete
+		local picker_session
+		local client = {
+			key = "dictionary",
+			available_methods = { lookup = "Lookup" },
+			lookup = function(word) return { { word = word .. "ish" } } end,
+			normalize = function(values) return values end,
+			describe = function(_, callback)
+				table.insert(events, "describe")
+				complete = callback
+			end,
+		}
+		pickers.word_picker = function(_, _, _, session)
+			table.insert(events, "open")
+			picker_session = session
+		end
+
+		workflow.new().run({ word = "green", method = "lookup", client = client, target = {} })
+
+		assert.are.same({ "open", "describe" }, events)
+		assert.are.equal("loading", picker_session.query_definition.status)
+		complete(nil, { word = "green", definitions = { { text = "A color." } } })
+		assert.are.equal("ok", picker_session.query_definition.status)
+		assert.are.equal("A color.", picker_session.query_definition.result.definitions[1].text)
+	end)
 end)

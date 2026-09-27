@@ -9,7 +9,9 @@ function M.new(opts, handlers)
 		method = base_options.method,
 		target = base_options.target,
 		client = base_options.client,
+		query_definition = nil,
 	}
+	local definition_listener
 
 	function session.options(overrides)
 		return vim.tbl_extend("force", {}, base_options, overrides or {})
@@ -29,6 +31,17 @@ function M.new(opts, handlers)
 
 	function session.reopen(state)
 		return handlers.reopen(state)
+	end
+
+	function session.set_query_definition(outcome)
+		session.query_definition = outcome
+		if definition_listener then
+			definition_listener(outcome)
+		end
+	end
+
+	function session.on_query_definition(callback)
+		definition_listener = callback
 	end
 
 	return session

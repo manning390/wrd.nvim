@@ -99,6 +99,10 @@ These are the default values, which you can override:
             },
         },
         show_part_of_speech = true, -- Set false for an even narrower word column
+        query_definition = {
+            enabled = true, -- Load exact current-query context after opening
+            max_definitions = 2, -- Keep room for the selected result
+        },
         grid = {
             columns = 5, -- Maximum; narrows automatically with the results pane
             cell_width = 18,
@@ -202,6 +206,41 @@ All but not in a specific part-of-speech subset.
 For separate custom bindings instead of cycling, map any of these public
 actions: `wrd_filter_all`, `wrd_filter_nouns`, `wrd_filter_adjectives`,
 `wrd_filter_verbs`, or `wrd_filter_adverbs` from `require('wrd.actions')`.
+
+### Query definition context
+
+When the client supports exact-word descriptions, the preview first shows a
+small `Query · …` section and then the definition for the highlighted result.
+The picker opens before the extra lookup starts, and the preview updates when
+it completes. Exact definitions and misses are cached across method changes;
+approximate spelling matches are ignored.
+
+Set `picker.query_definition.enabled = false` to retain only the selected-word
+preview. `picker.query_definition.max_definitions` limits the query section;
+it does not truncate definitions for the highlighted result. Clients without
+the optional `describe` capability keep the original selected-only preview.
+
+Preview content uses semantic highlight groups so definitions remain readable
+with the active colorscheme. Wrd supplies these default links:
+
+| Highlight | Default link | Content |
+| --- | --- | --- |
+| `WrdPreviewHeading` | `Title` | Query and selected headings |
+| `WrdPreviewWord` | `Identifier` | Query and selected words |
+| `WrdPreviewRank` | `Number` | Selected result rank |
+| `WrdPreviewBullet` | `Special` | Definition bullets |
+| `WrdPreviewPartOfSpeech` | `Type` | Part-of-speech labels |
+| `WrdPreviewDefinition` | `Normal` | Definition text |
+| `WrdPreviewDivider` | `WinSeparator` | Section divider |
+| `WrdPreviewMuted` | `Comment` | Loading and unavailable messages |
+
+Define any group after applying your colorscheme to customize it. Wrd creates
+only missing defaults, so user-defined groups are preserved:
+
+```lua
+vim.api.nvim_set_hl(0, 'WrdPreviewWord', { fg = '#89b4fa', bold = true })
+vim.api.nvim_set_hl(0, 'WrdPreviewPartOfSpeech', { link = 'Keyword' })
+```
 
 ### In-picker help
 

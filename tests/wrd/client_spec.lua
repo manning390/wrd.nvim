@@ -92,4 +92,39 @@ describe("public client contract", function()
 		assert.is_false(ok)
 		assert.is_truthy(message:find("Wrd Error: Client 'broken' failed to normalize results", 1, true))
 	end)
+
+	it("infers and validates the optional exact-word description capability", function()
+		local client = {
+			key = "dictionary",
+			available_methods = { lookup = "Lookup" },
+			lookup = function() return {} end,
+			normalize = function() return {} end,
+			describe = function() end,
+		}
+
+		local _, capabilities = client_contract.normalize(client, {})
+		assert.is_true(capabilities.describe)
+
+		assert.has_error(function()
+			client_contract.validate({
+				key = "dictionary",
+				available_methods = { lookup = "Lookup" },
+				lookup = function() return {} end,
+				normalize = function() return {} end,
+				capabilities = { describe = true },
+			})
+		end, "Wrd Error: Client 'dictionary' advertises describe but does not implement it")
+	end)
+
+	it("normalizes only an exact description result", function()
+		local client = { key = "dictionary" }
+		local exact = client_contract.normalize_description(client, " Cheese ", {
+			word = "cheese",
+			definitions = { { part_of_speech = "n", text = "  Pressed milk curds. " } },
+		})
+
+		assert.are.equal("cheese", exact.word)
+		assert.are.same({ { part_of_speech = "noun", text = "Pressed milk curds." } }, exact.definitions)
+		assert.is_nil(client_contract.normalize_description(client, "cheese", { word = "cheesed" }))
+	end)
 end)

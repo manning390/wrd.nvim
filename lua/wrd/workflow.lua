@@ -1,4 +1,5 @@
 local config = require("wrd.config")
+local descriptions = require("wrd.descriptions")
 local pickers = require("wrd.pickers")
 local query = require("wrd.query")
 local selection = require("wrd.selection")
@@ -106,7 +107,15 @@ function M.new(dependencies)
 			reopen = open_word,
 		})
 		replace(lifecycle)
-		return open_word()
+		local opened = open_word()
+		local definition_config = (prepared.picker or {}).query_definition or {}
+		if definition_config.enabled ~= false and outcome.capabilities.describe then
+			picker_session.set_query_definition({ status = "loading", word = prepared.word })
+			descriptions.request(prepared.client, prepared.word, function(description)
+				picker_session.set_query_definition(description)
+			end)
+		end
+		return opened
 	end
 
 	function workflow.methods(opts, lifecycle)

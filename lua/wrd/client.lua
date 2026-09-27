@@ -12,7 +12,8 @@ end
 ---@field available_methods table<string, string> Method keys and display labels.
 ---@field method_descriptions? table<string, string> Optional help text for methods.
 ---@field normalize fun(response: any): WrdResult[] Convert a provider response to Wrd results.
----@field capabilities? { parts_of_speech?: boolean } Optional capabilities not safely inferred from results.
+---@field capabilities? { parts_of_speech?: boolean, describe?: boolean } Optional capabilities not safely inferred from results.
+---@field describe? fun(word: string, callback: fun(error: string?, result: WrdResult?)): any Asynchronously describe one exact word.
 
 ---@class WrdDefinition
 ---@field text string
@@ -54,13 +55,19 @@ function M.validate(client)
 			error(string.format("Wrd Error: Client '%s' capabilities must be a table", client.key))
 		end
 		for capability, enabled in pairs(client.capabilities) do
-			if capability ~= "parts_of_speech" then
+			if capability ~= "parts_of_speech" and capability ~= "describe" then
 				error(string.format("Wrd Error: Client '%s' advertises unsupported capability '%s'", client.key, capability))
 			end
 			if type(enabled) ~= "boolean" then
 				error(string.format("Wrd Error: Client '%s' capability '%s' must be boolean", client.key, capability))
 			end
 		end
+	end
+	if client.describe ~= nil and type(client.describe) ~= "function" then
+		error(string.format("Wrd Error: Client '%s' describe must be a function", client.key))
+	end
+	if client.capabilities and client.capabilities.describe == true and type(client.describe) ~= "function" then
+		error(string.format("Wrd Error: Client '%s' advertises describe but does not implement it", client.key))
 	end
 
 	for method, label in pairs(client.available_methods) do
@@ -96,8 +103,24 @@ function M.normalize(client, response)
 	local declared = client.capabilities or {}
 	return normalized, {
 		parts_of_speech = declared.parts_of_speech == true or inferred.parts_of_speech,
+		describe = declared.describe == true or type(client.describe) == "function",
 		rank_jump = true,
 	}, issues
+end
+
+function M.normalize_description(client, word, value)
+	if value == nil then
+		return nil
+	end
+	local normalized, issues = result.prepare({ value })
+	if #normalized == 0 then
+		local reason = issues[1] and issues[1].reason or "invalid result"
+		error(string.format("Wrd Error: Client '%s' returned an invalid description: %s", client_name(client), reason))
+	end
+	if normalized[1].word:lower() ~= vim.trim(word):lower() then
+		return nil
+	end
+	return normalized[1]
 end
 
 return M

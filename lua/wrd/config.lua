@@ -57,6 +57,13 @@ local function validate(config)
 	end
 	expect_type(config.picker, "layout_config", "table", "picker.layout_config")
 	expect_type(config.picker, "show_part_of_speech", "boolean", "picker.show_part_of_speech")
+	expect_type(config.picker, "query_definition", "table", "picker.query_definition")
+	expect_type(config.picker.query_definition, "enabled", "boolean", "picker.query_definition.enabled")
+	expect_positive_integer(
+		config.picker.query_definition,
+		"max_definitions",
+		"picker.query_definition.max_definitions"
+	)
 
 	expect_type(config.picker, "grid", "table", "picker.grid")
 	expect_positive_integer(config.picker.grid, "columns", "picker.grid.columns")
@@ -105,6 +112,10 @@ local function defaults()
 				},
 			},
 			show_part_of_speech = true,
+			query_definition = {
+				enabled = true,
+				max_definitions = 2,
+			},
 			grid = {
 				columns = 5,
 				cell_width = 18,

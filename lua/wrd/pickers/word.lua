@@ -54,10 +54,13 @@ function M.open(data, prompt, opts, session, restore_state)
 			previewer = previewer.new_buffer_previewer({
 				define_preview = function(self, entry, _)
 					vim.wo[self.state.winid].wrap = true
-					local lines = preview.format_result(presentation.activate(entry))
+					local lines = preview.format_picker(
+						session.query_definition,
+						presentation.activate(entry),
+						(opts.picker or {}).query_definition
+					)
 					vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-					vim.api.nvim_buf_clear_namespace(self.state.bufnr, preview_namespace, 0, -1)
-					vim.api.nvim_buf_add_highlight(self.state.bufnr, preview_namespace, "Title", 0, 0, -1)
+					preview.apply_highlights(self.state.bufnr, preview_namespace, lines)
 				end,
 				title = "Definition",
 			}),
@@ -65,6 +68,11 @@ function M.open(data, prompt, opts, session, restore_state)
 				local jump
 				local controller = picker_controller.attach(prompt_bufnr, session)
 				controller.results = data
+				session.on_query_definition(function()
+					if vim.api.nvim_buf_is_valid(prompt_bufnr) then
+						controller.picker:refresh_previewer()
+					end
+				end)
 				picker_help.attach(prompt_bufnr, opts, controller)
 				presentation.attach(prompt_bufnr, map, controller)
 				if (opts.capabilities or {}).parts_of_speech then

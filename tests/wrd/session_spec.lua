@@ -49,6 +49,13 @@ describe("picker session", function()
 		local snapshot = { prompt = "fuzzy", rank = 3 }
 		state.reopen(snapshot)
 		assert.are.equal(snapshot, reopened_state)
+
+		local received_definition
+		state.on_query_definition(function(value) received_definition = value end)
+		local definition = { status = "ok", result = { word = "cheese" } }
+		state.set_query_definition(definition)
+		assert.are.equal(definition, state.query_definition)
+		assert.are.equal(definition, received_definition)
 	end)
 
 	it("does not expose its private base options through derived option tables", function()

@@ -1,5 +1,5 @@
 local wrd_actions = require("wrd.actions")
-local refinement = require("wrd.refinement")
+local filters = require("wrd.filters")
 
 local M = {}
 
@@ -11,13 +11,13 @@ local documented_actions = {
 	{
 		handler = wrd_actions.wrd_cycle_part_of_speech,
 		description = "cycle part-of-speech filter",
-		capability = "refinement",
+		capability = "filters",
 	},
-	{ handler = wrd_actions.wrd_filter_all, description = "show all parts of speech", capability = "refinement" },
-	{ handler = wrd_actions.wrd_filter_nouns, description = "show nouns", capability = "refinement" },
-	{ handler = wrd_actions.wrd_filter_adjectives, description = "show adjectives", capability = "refinement" },
-	{ handler = wrd_actions.wrd_filter_verbs, description = "show verbs", capability = "refinement" },
-	{ handler = wrd_actions.wrd_filter_adverbs, description = "show adverbs", capability = "refinement" },
+	{ handler = wrd_actions.wrd_filter_all, description = "show all parts of speech", capability = "filters" },
+	{ handler = wrd_actions.wrd_filter_nouns, description = "show nouns", capability = "filters" },
+	{ handler = wrd_actions.wrd_filter_adjectives, description = "show adjectives", capability = "filters" },
+	{ handler = wrd_actions.wrd_filter_verbs, description = "show verbs", capability = "filters" },
+	{ handler = wrd_actions.wrd_filter_adverbs, description = "show adverbs", capability = "filters" },
 	{ handler = wrd_actions.wrd_help, description = "toggle this help" },
 }
 
@@ -68,14 +68,14 @@ function M.build(picker, opts)
 	local method_description = (client.method_descriptions or {})[opts.method]
 	local filter = "All"
 	local capabilities = {
-		refinement = not method_picker and picker and picker._wrd_refinement ~= nil,
-		grid = not method_picker and picker and picker._wrd_grid ~= nil,
+		filters = not method_picker and picker and picker._wrd and picker._wrd.filters ~= nil,
+		grid = not method_picker and picker and picker._wrd and picker._wrd.grid ~= nil,
 		rank_jump = not method_picker
 			and (opts.capabilities or {}).rank_jump == true
 			and (opts.rank_jump or {}).enabled ~= false,
 	}
-	if capabilities.refinement then
-		filter = refinement.label(picker._wrd_refinement.current()) or picker._wrd_refinement.current()
+	if capabilities.filters then
+		filter = filters.label(picker._wrd.filters.current()) or picker._wrd.filters.current()
 	end
 
 	local lines = {
@@ -87,7 +87,7 @@ function M.build(picker, opts)
 	if method_label and method_label ~= "" then
 		table.insert(lines, string.format("Method: %s", method_label))
 	end
-	if capabilities.refinement then
+	if capabilities.filters then
 		table.insert(lines, string.format("Part-of-speech filter: %s", filter))
 	end
 	if method_description then

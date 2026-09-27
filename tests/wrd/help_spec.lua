@@ -13,11 +13,11 @@ end
 describe("help model", function()
 	it("describes active context and effective Wrd mappings", function()
 		local picker = {
-			_wrd_refinement = {
+			_wrd = { filters = {
 				current = function()
 					return "noun"
 				end,
-			},
+			} },
 		}
 		local lines, close_keys = help.build(picker, {
 			word = "cheese",
@@ -78,7 +78,7 @@ describe("help model", function()
 	end)
 
 	it("describes configured cell navigation for the grid prototype", function()
-		local lines = help.build({ _wrd_grid = {} }, {
+		local lines = help.build({ _wrd = { grid = {} } }, {
 			picker = { grid = { mappings = { left = "H", right = "L" } } },
 		})
 

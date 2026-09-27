@@ -1,4 +1,4 @@
-local refinement = require("wrd.refinement")
+local filters = require("wrd.filters")
 
 local entries = {
 	{ word = "one", rank = 1, parts_of_speech = { "noun" } },
@@ -8,12 +8,12 @@ local entries = {
 	{ word = "unknown", rank = 5, parts_of_speech = {} },
 }
 
-describe("part-of-speech refinement", function()
+describe("part-of-speech filters", function()
 	it("cycles through all supported filters in a stable order", function()
 		local current = "all"
 		local visited = {}
 		for _ = 1, 5 do
-			current = refinement.next(current)
+			current = filters.next(current)
 			table.insert(visited, current)
 		end
 
@@ -21,15 +21,15 @@ describe("part-of-speech refinement", function()
 	end)
 
 	it("keeps untagged entries in All and excludes them from specific filters", function()
-		assert.are.equal(5, #refinement.apply(entries, "all"))
-		assert.are.equal(2, #refinement.apply(entries, "noun"))
-		assert.are.equal(1, #refinement.apply(entries, "adjective"))
-		assert.are.equal(1, #refinement.apply(entries, "verb"))
-		assert.are.equal(1, #refinement.apply(entries, "adverb"))
+		assert.are.equal(5, #filters.apply(entries, "all"))
+		assert.are.equal(2, #filters.apply(entries, "noun"))
+		assert.are.equal(1, #filters.apply(entries, "adjective"))
+		assert.are.equal(1, #filters.apply(entries, "verb"))
+		assert.are.equal(1, #filters.apply(entries, "adverb"))
 	end)
 
 	it("maintains picker-local filter state and original ranks", function()
-		local state = refinement.new(entries)
+		local state = filters.new(entries)
 
 		assert.are.equal("all", state.current())
 		local nouns = state.cycle()
@@ -39,14 +39,14 @@ describe("part-of-speech refinement", function()
 	end)
 
 	it("rejects unsupported filters without changing state", function()
-		local state = refinement.new(entries)
+		local state = filters.new(entries)
 
 		assert.is_nil(state.set("preposition"))
 		assert.are.equal("all", state.current())
 	end)
 
 	it("skips unavailable filters while cycling", function()
-		local state = refinement.new({
+		local state = filters.new({
 			{ word = "one", rank = 1, parts_of_speech = { "noun" } },
 			{ word = "two", rank = 2, parts_of_speech = { "verb" } },
 		})

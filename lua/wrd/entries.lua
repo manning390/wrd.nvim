@@ -37,7 +37,6 @@ function M.make(result, opts)
 		wrd = {
 			word = result.word,
 			rank = result.rank,
-			opts = opts,
 		},
 	}
 end

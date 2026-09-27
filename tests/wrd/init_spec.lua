@@ -38,38 +38,6 @@ describe("wrd public API", function()
 		assert.are.equal(0, vim.fn.exists(":Wrd"))
 	end)
 
-	it("uses the configured client key", function()
-		local wrd = reload_wrd()
-		wrd.setup({ commands = false, client_key = "missing" })
-
-		assert.has_error(function()
-			wrd._make_client({})
-		end, "Wrd Error: Client 'missing' is not available")
-	end)
-
-	it("dispatches supported client methods", function()
-		local wrd = reload_wrd()
-		local client = {
-			key = "fake",
-			available_methods = { lookup = "Lookup" },
-			normalize = function(values) return values end,
-			lookup = function(word)
-				return { word .. " result" }
-			end,
-		}
-
-		assert.are.same({ "query result" }, wrd._fetch("query", "lookup", client))
-	end)
-
-	it("rejects unsupported client methods", function()
-		local wrd = reload_wrd()
-		local client = { key = "fake", available_methods = {} }
-
-		assert.has_error(function()
-			wrd._fetch("query", "missing", client)
-		end, "Wrd Error: Method 'missing' is not available on Client 'fake'.")
-	end)
-
 	it("reports a genuinely empty result without opening a picker", function()
 		local notification
 		vim.notify = function(message, level)
@@ -100,8 +68,8 @@ describe("wrd public API", function()
 		local picker = require("wrd.pickers")
 		local original_word_picker = picker.word_picker
 		local received
-		picker.word_picker = function(data, prompt, opts)
-			received = { data = data, prompt = prompt, opts = opts }
+		picker.word_picker = function(data, prompt, opts, picker_session)
+			received = { data = data, prompt = prompt, opts = opts, session = picker_session }
 			return "opened"
 		end
 
@@ -137,5 +105,45 @@ describe("wrd public API", function()
 		assert.are.equal("Like green", received.data[1].definitions[1].text)
 		assert.is_false(received.opts.capabilities.parts_of_speech)
 		assert.is_true(received.opts.capabilities.rank_jump)
+		assert.are.equal("green", received.session.query_word)
+		assert.are.equal("lookup", received.session.method)
+		assert.are.equal(received.opts.target, received.session.target)
+	end)
+
+	it("routes method selection back through the same word-query workflow", function()
+		local wrd = reload_wrd()
+		local picker = require("wrd.pickers")
+		local original_method_picker = picker.method_picker
+		local original_word_picker = picker.word_picker
+		local method_options
+		local word_options
+		local target = { kind = "word", bufnr = 7 }
+		local client = {
+			key = "dictionary",
+			available_methods = { lookup = "Lookup" },
+			lookup = function(word) return { { word = word .. "ish" } } end,
+			normalize = function(values) return values end,
+		}
+
+		picker.method_picker = function(_, callback, opts)
+			method_options = opts
+			callback("lookup")
+			return "methods-opened"
+		end
+		picker.word_picker = function(_, _, opts)
+			word_options = opts
+			return "words-opened"
+		end
+
+		wrd.setup({ commands = false })
+		local opened = wrd.run_methods({ word = "green", client = client, target = target })
+		picker.method_picker = original_method_picker
+		picker.word_picker = original_word_picker
+
+		assert.are.equal("methods-opened", opened)
+		assert.are.equal(target, method_options.target)
+		assert.are.equal("lookup", word_options.method)
+		assert.are.equal("green", word_options.word)
+		assert.are.equal(target, word_options.target)
 	end)
 end)

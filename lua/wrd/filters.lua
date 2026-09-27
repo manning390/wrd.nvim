@@ -2,7 +2,7 @@ local result = require("wrd.result")
 
 local M = {}
 
-M.filters = { "all", "noun", "adjective", "verb", "adverb" }
+M.available = { "all", "noun", "adjective", "verb", "adverb" }
 
 local labels = {
 	all = "All",
@@ -17,13 +17,13 @@ function M.label(part_of_speech)
 end
 
 function M.next(part_of_speech)
-	for index, value in ipairs(M.filters) do
+	for index, value in ipairs(M.available) do
 		if value == part_of_speech then
-			return M.filters[(index % #M.filters) + 1]
+			return M.available[(index % #M.available) + 1]
 		end
 	end
 
-	return M.filters[1]
+	return M.available[1]
 end
 
 function M.apply(entries, part_of_speech)
@@ -54,7 +54,7 @@ function M.new(entries)
 
 	function state.cycle()
 		local candidate = current
-		for _ = 1, #M.filters do
+		for _ = 1, #M.available do
 			candidate = M.next(candidate)
 			local filtered = M.apply(source, candidate)
 			if #filtered > 0 then

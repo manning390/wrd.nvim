@@ -2,15 +2,15 @@ local saved_modules = {}
 local module_names = {
 	"telescope.actions.state",
 	"telescope.finders",
-	"wrd.picker_refinement",
+	"wrd.picker_filters",
 }
 
-describe("Telescope part-of-speech refinement", function()
+describe("Telescope part-of-speech filters", function()
 	local picker
 	local refresh_finder
 	local refresh_opts
 	local title
-	local picker_refinement
+	local picker_filters
 
 	before_each(function()
 		for _, name in ipairs(module_names) do
@@ -42,8 +42,8 @@ describe("Telescope part-of-speech refinement", function()
 				return opts
 			end,
 		}
-		package.loaded["wrd.picker_refinement"] = nil
-		picker_refinement = require("wrd.picker_refinement")
+		package.loaded["wrd.picker_filters"] = nil
+		picker_filters = require("wrd.picker_filters")
 	end)
 
 	after_each(function()
@@ -61,7 +61,11 @@ describe("Telescope part-of-speech refinement", function()
 		local entry_maker = function(entry)
 			return entry
 		end
-		local state = picker_refinement.attach(42, entries, entry_maker)
+		local finder_factory = function(filtered)
+			return { results = filtered, entry_maker = entry_maker }
+		end
+		local controller = {}
+		local state = picker_filters.attach(42, entries, finder_factory, controller)
 
 		assert.are.equal("Words · All (3/3)", title)
 		assert.is_true(state.refresh("noun"))
@@ -70,5 +74,6 @@ describe("Telescope part-of-speech refinement", function()
 		assert.is_false(refresh_opts.reset_prompt)
 		assert.are.equal("Words · Nouns (2/3)", title)
 		assert.are.equal(title, picker.results_title)
+		assert.are.equal(state, controller.filters)
 	end)
 end)

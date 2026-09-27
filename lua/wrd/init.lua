@@ -4,12 +4,11 @@ if not ok then
 	error("Wrd Error: This plugin requires nvim-telescope/telescope.nvim")
 end
 
-local pickers = require("wrd.pickers")
 local config = require("wrd.config")
-local query = require("wrd.query")
-local selection = require("wrd.selection")
+local workflow = require("wrd.workflow")
 
 local wrd = {}
+local runner
 
 function wrd.setup(opts)
 	local current = config.setup(opts)
@@ -17,6 +16,13 @@ function wrd.setup(opts)
 	if current.commands then
 		require("wrd.commands").setup()
 	end
+end
+
+local function get_runner()
+	if not runner then
+		runner = workflow.new({ setup = wrd.setup })
+	end
+	return runner
 end
 
 -- opts {
@@ -29,97 +35,11 @@ end
 --    prompt: string
 -- }
 function wrd.run(opts)
-	opts = opts or {}
-	if opts.target == nil then
-		opts.target = selection.capture()
-	end
-
-	if not config.is_setup() then
-		wrd.setup()
-	end
-	local current = config.get()
-
-	opts = wrd._make_client(opts)
-
-	if not opts.method or opts.method == "" then
-		local default_method = current.default_method
-		if opts.method == "" or not default_method or default_method == "" then
-			return wrd.run_methods(opts)
-		else
-			opts.method = default_method
-		end
-	end
-
-	if not opts.word or opts.word == "" then
-		opts.word = wrd._capture_hover(selection.text(opts.target))
-	end
-
-	if not opts.mappings then
-		opts.mappings = current.mappings
-	end
-	if opts.rank_jump == nil then
-		opts.rank_jump = current.rank_jump
-	end
-	if opts.picker == nil then
-		opts.picker = current.picker
-	end
-
-	-- Set our prompt
-	local prompt = opts.prompt or opts.word
-	if not opts.prompt then
-		local query_title = opts.client.available_methods[opts.method]
-		if query_title ~= "" then
-			prompt = query_title .. ": " .. opts.word
-		end
-	end
-
-	local response = wrd._fetch(opts.word, opts.method, opts.client)
-	if response == nil then
-		return
-	end
-	local data, capabilities, issues = query.normalize(opts.client, response)
-	if vim.tbl_isempty(data) then
-		local method_label = opts.client.available_methods[opts.method] or opts.method
-		local message = #issues > 0 and string.format("Wrd: No usable results for '%s'", opts.word)
-			or string.format("Wrd: No %s results for '%s'", method_label, opts.word)
-		vim.notify(message, vim.log.levels.INFO)
-		return
-	end
-	opts.capabilities = capabilities
-
-	return pickers.word_picker(data, prompt, opts)
-end
-
-function wrd._make_client(opts)
-	return query.attach_client(opts, config.get())
-end
-
-function wrd._fetch(word, query_method, client)
-	return query.fetch(word, query_method, client)
+	return get_runner().run(opts)
 end
 
 function wrd.run_methods(opts)
-	opts = opts or {}
-	local current = config.get()
-
-	opts = wrd._make_client(opts)
-	if not opts.mappings then
-		opts.mappings = current.mappings
-	end
-
-	local callback = function(selection)
-		wrd.run(vim.tbl_extend("keep", { method = selection }, opts))
-	end
-
-	return pickers.method_picker(
-		opts.client.available_methods,
-		callback,
-		vim.tbl_extend("force", opts, { prompt_title = "Client Methods", _wrd_picker_kind = "methods" })
-	)
-end
-
-function wrd._capture_hover(default)
-	return vim.fn.input("Word: ", default or vim.fn.expand("<cword>"))
+	return get_runner().methods(opts)
 end
 
 return wrd

@@ -1,11 +1,10 @@
-local action_state = require("telescope.actions.state")
 local help = require("wrd.help")
 local help_window = require("wrd.help_window")
 
 local M = {}
 
-function M.attach(prompt_bufnr, opts)
-	local picker = action_state.get_current_picker(prompt_bufnr)
+function M.attach(prompt_bufnr, opts, controller)
+	local picker = controller.picker
 	local active_window
 	local state = {}
 
@@ -22,7 +21,7 @@ function M.attach(prompt_bufnr, opts)
 		})
 	end
 
-	picker._wrd_help = state
+	controller.help = state
 	return state
 end
 

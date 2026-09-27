@@ -1,6 +1,5 @@
 local action_state = require("telescope.actions.state")
-local finders = require("telescope.finders")
-local refinement = require("wrd.refinement")
+local filters = require("wrd.filters")
 
 local M = {}
 
@@ -11,24 +10,12 @@ local function change_results_title(picker, title)
 	end
 end
 
-function M.attach(prompt_bufnr, entries, entry_maker, finder_factory)
+function M.attach(prompt_bufnr, entries, finder_factory, controller)
 	local picker = action_state.get_current_picker(prompt_bufnr)
-	local state = refinement.new(entries)
+	local state = filters.new(entries)
 
 	local function refresh(filtered)
-		local finder
-		if finder_factory then
-			finder = finder_factory(filtered)
-		else
-			finder = finders.new_table({
-				results = filtered,
-				entry_maker = entry_maker,
-			})
-		end
-		picker:refresh(
-			finder,
-			{ reset_prompt = false }
-		)
+		picker:refresh(finder_factory(filtered), { reset_prompt = false })
 		change_results_title(picker, state.title())
 	end
 
@@ -47,7 +34,7 @@ function M.attach(prompt_bufnr, entries, entry_maker, finder_factory)
 		return true
 	end
 
-	picker._wrd_refinement = state
+	controller.filters = state
 	change_results_title(picker, state.title())
 	return state
 end

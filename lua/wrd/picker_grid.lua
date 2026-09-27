@@ -10,7 +10,7 @@ function M.finder(state)
 	})
 end
 
-function M.attach(prompt_bufnr, map, state, opts)
+function M.attach(prompt_bufnr, map, state, opts, controller)
 	local picker = action_state.get_current_picker(prompt_bufnr)
 	local mappings = (opts or {}).mappings or {}
 	state.set_available_width(vim.api.nvim_win_get_width(picker.results_win))
@@ -43,7 +43,7 @@ function M.attach(prompt_bufnr, map, state, opts)
 	end
 	bind(mappings.left, -1)
 	bind(mappings.right, 1)
-	picker._wrd_grid = state
+	controller.grid = state
 
 	vim.api.nvim_create_autocmd("VimResized", {
 		group = resize_group,

@@ -1,18 +1,20 @@
 local saved_modules = {}
 local selection
 local closed_prompt
-local run_opts
-local method_opts
+local followed_word
+local methods_requested
+local changed_word
 local current_picker
 local copied_word
 local applied_target
+local restored_prompt
 local wrd_actions
 
 local module_names = {
 	"telescope.actions",
 	"telescope.actions.state",
-	"wrd",
 	"wrd.actions",
+	"wrd.picker_controller",
 	"wrd.selection",
 }
 
@@ -24,11 +26,13 @@ describe("wrd picker actions", function()
 
 		selection = nil
 		closed_prompt = nil
-		run_opts = nil
-		method_opts = nil
+		followed_word = nil
+		methods_requested = false
+		changed_word = nil
 		current_picker = nil
 		copied_word = nil
 		applied_target = nil
+		restored_prompt = nil
 
 		package.loaded["telescope.actions"] = {
 			close = function(prompt_bufnr)
@@ -41,14 +45,6 @@ describe("wrd picker actions", function()
 			end,
 			get_current_picker = function()
 				return current_picker
-			end,
-		}
-		package.loaded["wrd"] = {
-			run = function(opts)
-				run_opts = opts
-			end,
-			run_methods = function(opts)
-				method_opts = opts
 			end,
 		}
 		package.loaded["wrd.selection"] = {
@@ -64,6 +60,21 @@ describe("wrd picker actions", function()
 		wrd_actions = require("wrd.actions")
 	end)
 
+	local function attach_session(query_word, target)
+		current_picker = {
+			_wrd = {
+				restore_prompt = function(insert_mode) restored_prompt = insert_mode end,
+				session = {
+					query_word = query_word,
+					target = target,
+					follow = function(word) followed_word = word end,
+					choose_method = function() methods_requested = true end,
+					change_word = function(word) changed_word = word end,
+				},
+			},
+		}
+	end
+
 	after_each(function()
 		for _, name in ipairs(module_names) do
 			package.loaded[name] = saved_modules[name]
@@ -71,35 +82,26 @@ describe("wrd picker actions", function()
 	end)
 
 	it("closes the current picker and follows the highlighted word", function()
-		local original_opts = { word = "cheese", method = "means_like" }
+		attach_session("cheese")
 		selection = {
 			wrd = {
 				word = "parmesan",
-				opts = original_opts,
 			},
 		}
 
 		wrd_actions.wrd_follow(42)
 
 		assert.are.equal(42, closed_prompt)
-		assert.are.equal("parmesan", run_opts.word)
-		assert.are.equal("means_like", run_opts.method)
-		assert.are.equal("cheese", original_opts.word)
+		assert.are.equal("parmesan", followed_word)
 	end)
 
 	it("changes method for the current query word after closing the picker", function()
-		selection = {
-			wrd = {
-				word = "parmesan",
-				opts = { word = "cheese", method = "means_like" },
-			},
-		}
+		attach_session("cheese")
 
 		wrd_actions.wrd_methods(84)
 
 		assert.are.equal(84, closed_prompt)
-		assert.are.equal("cheese", method_opts.word)
-		assert.are.equal("", method_opts.method)
+		assert.is_true(methods_requested)
 	end)
 
 	it("changes the current query word while preserving its insertion target", function()
@@ -111,12 +113,7 @@ describe("wrd picker actions", function()
 			input_callback = callback
 		end
 		local target = { kind = "word", bufnr = 7 }
-		selection = {
-			wrd = {
-				word = "parmesan",
-				opts = { word = "cheese", method = "means_like", target = target },
-			},
-		}
+		attach_session("cheese", target)
 
 		wrd_actions.wrd_change_word(0)
 		assert.are.equal("cheese", input_opts.default)
@@ -124,9 +121,23 @@ describe("wrd picker actions", function()
 		input_callback(" bread ")
 		vim.ui.input = original_input
 
-		assert.are.equal("bread", run_opts.word)
-		assert.are.equal("means_like", run_opts.method)
-		assert.are.equal(target, run_opts.target)
+		assert.are.equal("bread", changed_word)
+		assert.is_nil(restored_prompt)
+	end)
+
+	it("restores picker focus after cancelling a query-word change", function()
+		local input_callback
+		local original_input = vim.ui.input
+		vim.ui.input = function(_, callback) input_callback = callback end
+		attach_session("cheese")
+
+		wrd_actions.wrd_change_word(42)
+		input_callback(nil)
+		vim.ui.input = original_input
+
+		assert.is_not_nil(restored_prompt)
+		assert.is_nil(closed_prompt)
+		assert.is_nil(changed_word)
 	end)
 
 	it("does nothing when no result is selected", function()
@@ -135,16 +146,16 @@ describe("wrd picker actions", function()
 		wrd_actions.wrd_methods(84)
 
 		assert.is_nil(closed_prompt)
-		assert.is_nil(run_opts)
-		assert.is_nil(method_opts)
+		assert.is_nil(followed_word)
+		assert.is_false(methods_requested)
 	end)
 
 	it("copies and applies the selected word to its captured origin target", function()
 		local target = { kind = "word", bufnr = 1 }
+		attach_session("cheese", target)
 		selection = {
 			wrd = {
 				word = "parmesan",
-				opts = { target = target },
 			},
 		}
 
@@ -156,7 +167,7 @@ describe("wrd picker actions", function()
 	end)
 
 	it("supports copying without applying an origin target", function()
-		selection = { wrd = { word = "parmesan", opts = {} } }
+		selection = { wrd = { word = "parmesan" } }
 
 		wrd_actions.wrd_copy(21)
 
@@ -165,14 +176,14 @@ describe("wrd picker actions", function()
 		assert.are.equal(21, closed_prompt)
 	end)
 
-	it("cycles the active picker part-of-speech refinement", function()
+	it("cycles the active picker part-of-speech filter", function()
 		local cycled = false
 		current_picker = {
-			_wrd_refinement = {
+			_wrd = { filters = {
 				refresh_next = function()
 					cycled = true
 				end,
-			},
+			} },
 		}
 
 		wrd_actions.wrd_cycle_part_of_speech(42)
@@ -183,11 +194,11 @@ describe("wrd picker actions", function()
 	it("exposes direct part-of-speech actions for custom mappings", function()
 		local selected_filter
 		current_picker = {
-			_wrd_refinement = {
+			_wrd = { filters = {
 				refresh = function(part_of_speech)
 					selected_filter = part_of_speech
 				end,
-			},
+			} },
 		}
 
 		wrd_actions.wrd_filter_adjectives(42)
@@ -195,7 +206,7 @@ describe("wrd picker actions", function()
 		assert.are.equal("adjective", selected_filter)
 	end)
 
-	it("ignores refinement actions for pickers without refinement state", function()
+	it("ignores filter actions for pickers without filter state", function()
 		current_picker = {}
 
 		assert.has_no.errors(function()
@@ -206,11 +217,11 @@ describe("wrd picker actions", function()
 	it("toggles picker-local help state", function()
 		local toggled = false
 		current_picker = {
-			_wrd_help = {
+			_wrd = { help = {
 				toggle = function()
 					toggled = true
 				end,
-			},
+			} },
 		}
 
 		wrd_actions.wrd_help(42)

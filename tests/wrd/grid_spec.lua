@@ -47,7 +47,7 @@ describe("grid presentation model", function()
 		assert.are.equal(1, entry.wrd.rank)
 		state.activate(entry, 2)
 		assert.are.equal(4, entry.wrd.rank)
-		assert.are.equal(opts, entry.wrd.opts)
+		assert.is_nil(entry.wrd.opts)
 	end)
 
 	it("does not change the active column while constructing an incomplete final row", function()

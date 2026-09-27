@@ -20,7 +20,7 @@ describe("normalized Telescope entries", function()
 		assert.are.equal("  6. parmesan [n,adj]", entry.display)
 		assert.are.equal("parmesan", entry.wrd.word)
 		assert.are.equal(6, entry.wrd.rank)
-		assert.are.equal(opts, entry.wrd.opts)
+		assert.is_nil(entry.wrd.opts)
 	end)
 
 	it("omits the label when part-of-speech metadata is unavailable", function()

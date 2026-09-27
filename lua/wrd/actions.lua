@@ -4,6 +4,7 @@ if not ok then
 end
 
 local action_state = require("telescope.actions.state")
+local picker_controller = require("wrd.picker_controller")
 local selection_target = require("wrd.selection")
 
 local M = {}
@@ -14,10 +15,12 @@ function M.wrd_select(prompt_bufnr)
 		return
 	end
 	local selected_word = selection.wrd.word
+	local controller = picker_controller.get(prompt_bufnr)
+	local session = controller and controller.session
 
 	selection_target.set_registers(selected_word)
 	actions.close(prompt_bufnr)
-	local applied, reason = selection_target.apply(selection.wrd.opts.target, selected_word)
+	local applied, reason = selection_target.apply(session and session.target, selected_word)
 	if not applied then
 		vim.notify("Wrd: Copied selection; " .. reason, vim.log.levels.INFO)
 	end
@@ -35,85 +38,87 @@ end
 
 function M.wrd_follow(prompt_bufnr)
 	local selection = action_state.get_selected_entry()
-	if selection then
-		local opts = vim.tbl_extend("force", selection.wrd.opts, { word = selection.wrd.word })
+	local controller = picker_controller.get(prompt_bufnr)
+	local session = controller and controller.session
+	if selection and session then
 		actions.close(prompt_bufnr)
-		require("wrd").run(opts)
+		session.follow(selection.wrd.word)
 	end
 end
 
 function M.wrd_methods(prompt_bufnr)
-	local selection = action_state.get_selected_entry()
-	if selection then
-		local opts = vim.tbl_extend("force", selection.wrd.opts, { method = "" })
+	local controller = picker_controller.get(prompt_bufnr)
+	local session = controller and controller.session
+	if session then
 		actions.close(prompt_bufnr)
-		require("wrd").run_methods(opts)
+		session.choose_method()
 	end
 end
 
 function M.wrd_change_word(prompt_bufnr)
-	local selected = action_state.get_selected_entry()
-	if not selected then
+	local controller = picker_controller.get(prompt_bufnr)
+	local session = controller and controller.session
+	if not session then
 		return
 	end
+	local return_to_insert = vim.api.nvim_get_mode().mode:sub(1, 1) == "i"
 
-	local opts = vim.tbl_extend("force", {}, selected.wrd.opts)
-	vim.ui.input({ prompt = "Wrd word: ", default = opts.word }, function(word)
+	vim.ui.input({ prompt = "Wrd word: ", default = session.query_word }, function(word)
 		word = word and vim.fn.trim(word) or ""
-		if word == "" or word == opts.word then
+		if word == "" or word == session.query_word then
+			controller.restore_prompt(return_to_insert)
 			return
 		end
 
 		if vim.api.nvim_buf_is_valid(prompt_bufnr) then
 			actions.close(prompt_bufnr)
 		end
-		opts.word = word
-		require("wrd").run(opts)
+		session.change_word(word)
 	end)
 end
 
-local function refine(prompt_bufnr, part_of_speech)
-	local picker = action_state.get_current_picker(prompt_bufnr)
-	local refinement = picker and picker._wrd_refinement
-	if not refinement then
+local function apply_filter(prompt_bufnr, part_of_speech)
+	local controller = picker_controller.get(prompt_bufnr)
+	local filters = controller and controller.filters
+	if not filters then
 		return
 	end
 
 	if part_of_speech then
-		refinement.refresh(part_of_speech)
+		filters.refresh(part_of_speech)
 	else
-		refinement.refresh_next()
+		filters.refresh_next()
 	end
 end
 
 function M.wrd_cycle_part_of_speech(prompt_bufnr)
-	refine(prompt_bufnr)
+	apply_filter(prompt_bufnr)
 end
 
 function M.wrd_filter_all(prompt_bufnr)
-	refine(prompt_bufnr, "all")
+	apply_filter(prompt_bufnr, "all")
 end
 
 function M.wrd_filter_nouns(prompt_bufnr)
-	refine(prompt_bufnr, "noun")
+	apply_filter(prompt_bufnr, "noun")
 end
 
 function M.wrd_filter_adjectives(prompt_bufnr)
-	refine(prompt_bufnr, "adjective")
+	apply_filter(prompt_bufnr, "adjective")
 end
 
 function M.wrd_filter_verbs(prompt_bufnr)
-	refine(prompt_bufnr, "verb")
+	apply_filter(prompt_bufnr, "verb")
 end
 
 function M.wrd_filter_adverbs(prompt_bufnr)
-	refine(prompt_bufnr, "adverb")
+	apply_filter(prompt_bufnr, "adverb")
 end
 
 function M.wrd_help(prompt_bufnr)
-	local picker = action_state.get_current_picker(prompt_bufnr)
-	if picker and picker._wrd_help then
-		picker._wrd_help.toggle()
+	local controller = picker_controller.get(prompt_bufnr)
+	if controller and controller.help then
+		controller.help.toggle()
 	end
 end
 

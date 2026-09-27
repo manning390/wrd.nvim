@@ -61,7 +61,7 @@ function M.pack(results, columns)
 	return rows
 end
 
-function M.new(results, opts, picker_opts)
+function M.new(results, opts, display_opts)
 	opts = opts or {}
 	local state = {
 		_results = results,
@@ -69,7 +69,7 @@ function M.new(results, opts, picker_opts)
 		columns = opts.columns or 5,
 		cell_width = opts.cell_width or 18,
 		separator = opts.separator or " │ ",
-		picker_opts = picker_opts,
+		display_opts = display_opts,
 	}
 
 	function state.set_results(values)
@@ -104,12 +104,12 @@ function M.new(results, opts, picker_opts)
 			state.column = column
 		end
 		entry.value = result
-		entry.wrd = { word = result.word, rank = result.rank, opts = state.picker_opts }
+		entry.wrd = { word = result.word, rank = result.rank }
 		return result
 	end
 
 	function state.display(row)
-		local display_opts = vim.tbl_deep_extend("force", {}, state.picker_opts or {}, {
+		local entry_display_opts = vim.tbl_deep_extend("force", {}, state.display_opts or {}, {
 			picker = { show_part_of_speech = opts.show_part_of_speech == true },
 		})
 		local cells = {}
@@ -117,7 +117,7 @@ function M.new(results, opts, picker_opts)
 			local result = row.cells[column]
 			if result then
 				local marker = column == state.column and "›" or " "
-				cells[column] = marker .. truncate(entries.display(result, display_opts), state.cell_width - 1)
+				cells[column] = marker .. truncate(entries.display(result, entry_display_opts), state.cell_width - 1)
 			else
 				cells[column] = string.rep(" ", state.cell_width)
 			end

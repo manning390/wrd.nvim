@@ -15,16 +15,20 @@ function M.new(opts, handlers)
 		return vim.tbl_extend("force", {}, base_options, overrides or {})
 	end
 
-	function session.follow(word)
-		return handlers.run(session.options({ word = word }))
+	function session.follow(word, lifecycle)
+		return handlers.run(session.options({ word = word }), lifecycle)
 	end
 
-	function session.choose_method()
-		return handlers.run_methods(session.options({ method = "" }))
+	function session.choose_method(lifecycle)
+		return handlers.run_methods(session.options({ method = "" }), lifecycle)
 	end
 
-	function session.change_word(word)
-		return handlers.run(session.options({ word = word }))
+	function session.change_word(word, lifecycle)
+		return handlers.run(session.options({ word = word }), lifecycle)
+	end
+
+	function session.reopen(state)
+		return handlers.reopen(state)
 	end
 
 	return session

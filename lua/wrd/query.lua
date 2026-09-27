@@ -2,6 +2,12 @@ local client_contract = require("wrd.client")
 
 local M = {}
 
+local function failure_message(message)
+	message = tostring(message)
+	local wrd_message = message:match("Wrd Error: (.*)")
+	return "Wrd: " .. (wrd_message or message)
+end
+
 local function load_client(client_key)
 	local ok, client = pcall(require, "wrd.clients." .. client_key)
 	if not ok then
@@ -36,11 +42,7 @@ function M.attach_client(opts, config)
 	return opts
 end
 
-function M.fetch(word, method, client)
-	if not method or not word or word == "" then
-		return nil
-	end
-
+local function validate_method(method, client)
 	if not client or type(client.available_methods) ~= "table" or not client.available_methods[method] then
 		local client_key = client and client.key or "unknown"
 		error(string.format("Wrd Error: Method '%s' is not available on Client '%s'.", method, client_key))
@@ -49,6 +51,13 @@ function M.fetch(word, method, client)
 	if type(client[method]) ~= "function" then
 		error(string.format("Wrd Error: Client '%s' does not implement method '%s'.", client.key or "unknown", method))
 	end
+end
+
+function M.fetch(word, method, client)
+	if not method or not word or word == "" then
+		return nil
+	end
+	validate_method(method, client)
 
 	local ok, response = pcall(client[method], word)
 	if not ok then
@@ -60,6 +69,44 @@ end
 
 function M.normalize(client, response)
 	return client_contract.normalize(client, response)
+end
+
+function M.execute(word, method, client)
+	if not method or not word or word == "" then
+		return { status = "cancelled" }
+	end
+	validate_method(method, client)
+
+	local ok, response = pcall(client[method], word)
+	if not ok then
+		return {
+			status = "failed",
+			message = string.format(
+				"Wrd: Client '%s' method '%s' failed: %s",
+				client.key or "unknown",
+				method,
+				response
+			),
+		}
+	end
+
+	local normalized, results, capabilities, issues = pcall(M.normalize, client, response)
+	if not normalized then
+		return { status = "failed", message = failure_message(results) }
+	end
+	if vim.tbl_isempty(results) then
+		return {
+			status = #issues > 0 and "unusable" or "empty",
+			issues = issues,
+		}
+	end
+
+	return {
+		status = "ok",
+		results = results,
+		capabilities = capabilities,
+		issues = issues,
+	}
 end
 
 return M

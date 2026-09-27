@@ -10,7 +10,7 @@ local function change_results_title(picker, title)
 	end
 end
 
-function M.attach(prompt_bufnr, entries, finder_factory, controller)
+function M.attach(prompt_bufnr, entries, finder_factory, controller, initial_filter)
 	local picker = action_state.get_current_picker(prompt_bufnr)
 	local state = filters.new(entries)
 
@@ -35,7 +35,11 @@ function M.attach(prompt_bufnr, entries, finder_factory, controller)
 	end
 
 	controller.filters = state
-	change_results_title(picker, state.title())
+	if initial_filter and initial_filter ~= "all" then
+		state.refresh(initial_filter)
+	else
+		change_results_title(picker, state.title())
+	end
 	return state
 end
 

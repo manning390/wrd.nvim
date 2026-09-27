@@ -136,6 +136,13 @@ These are the default values, which you can override:
 Mapping overrides are merged per mode and key. You can change one binding
 without copying the rest of the default mapping table; set a specific mapping
 to `false` to disable it.
+
+`setup()` validates configuration before replacing the active settings.
+Invalid values report their full path—for example,
+`Wrd Error: config.picker.presentation must be 'list' or 'grid'`—and leave the
+last valid configuration active. Telescope action values remain extensible;
+Wrd validates mapping containers but does not restrict their action types.
+
 ### Command
 With the default config the `:Wrd` command will get automatically registered.
 
@@ -159,6 +166,13 @@ While you are browsing the dictionary responses, you may want to dig deeper or c
 - `/` Will take the currently highlighted word within telescope and rerun your method with that word.
 - `<tab>` Will prompt you to change methods provided by the client with the current queried word.
 - `<C-e>` Lets you replace the current query word and reruns the same method. Cancelling or submitting the unchanged word leaves the existing picker open.
+
+These transitions replace the current picker only after the new query returns
+usable results. Cancellation, empty results, and provider failures return to
+the previous picker with its fuzzy prompt, filter, selection, and preview
+intact. Telescope permits only one active picker, so method selection snapshots
+the word picker before closing it and reconstructs that state if selection is
+cancelled or the chosen method cannot produce replacement results.
 
 ### Ranked navigation
 

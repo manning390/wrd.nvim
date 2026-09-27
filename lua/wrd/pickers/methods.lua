@@ -9,7 +9,7 @@ local wrd_actions = require("wrd.actions")
 
 local M = {}
 
-function M.open(available_methods, callback, opts)
+function M.open(available_methods, callback, opts, on_close)
 	local data = {}
 	for index, method in ipairs(vim.tbl_keys(available_methods)) do
 		data[index] = { value = method, ordinal = method, display = available_methods[method] }
@@ -21,10 +21,25 @@ function M.open(available_methods, callback, opts)
 			finder = finders.new_table({ results = data, entry_maker = function(entry) return entry end }),
 			sorter = conf.generic_sorter(opts),
 			attach_mappings = function(prompt_bufnr, map)
+				local selected = false
 				local controller = picker_controller.attach(prompt_bufnr)
 				controller.methods = data
+				if on_close then
+					vim.api.nvim_create_autocmd("BufWipeout", {
+						buffer = prompt_bufnr,
+						once = true,
+						callback = function()
+							vim.schedule(function()
+								if not selected then
+									on_close()
+								end
+							end)
+						end,
+					})
+				end
 				picker_help.attach(prompt_bufnr, opts, controller)
 				actions.select_default:replace(function()
+					selected = true
 					local selection = action_state.get_selected_entry().value
 					actions.close(prompt_bufnr)
 					callback(selection)

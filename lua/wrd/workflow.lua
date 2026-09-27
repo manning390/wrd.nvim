@@ -29,24 +29,37 @@ function M.new(dependencies)
 		return prepared, current
 	end
 
-	local function open_methods(opts)
+	local function restore(lifecycle)
+		if lifecycle and lifecycle.restore then
+			lifecycle.restore()
+		end
+	end
+
+	local function replace(lifecycle)
+		if lifecycle and lifecycle.before_open then
+			lifecycle.before_open()
+		end
+	end
+
+	local function open_methods(opts, lifecycle)
 		local callback = function(method)
-			workflow.run(vim.tbl_extend("force", {}, opts, { method = method }))
+			workflow.run(vim.tbl_extend("force", {}, opts, { method = method }), lifecycle)
 		end
 
 		return pickers.method_picker(
 			opts.client.available_methods,
 			callback,
-			vim.tbl_extend("force", {}, opts, { prompt_title = "Client Methods", _wrd_picker_kind = "methods" })
+			vim.tbl_extend("force", {}, opts, { prompt_title = "Client Methods", _wrd_picker_kind = "methods" }),
+			lifecycle and lifecycle.restore
 		)
 	end
 
-	function workflow.run(opts)
+	function workflow.run(opts, lifecycle)
 		local prepared, current = prepare(opts)
 		if not prepared.method or prepared.method == "" then
 			local default_method = current.default_method
 			if prepared.method == "" or not default_method or default_method == "" then
-				return open_methods(prepared)
+				return open_methods(prepared, lifecycle)
 			end
 			prepared.method = default_method
 		end
@@ -63,30 +76,42 @@ function M.new(dependencies)
 			end
 		end
 
-		local response = query.fetch(prepared.word, prepared.method, prepared.client)
-		if response == nil then
+		local outcome = query.execute(prepared.word, prepared.method, prepared.client)
+		if outcome.status == "cancelled" then
+			restore(lifecycle)
 			return
 		end
-		local data, capabilities, issues = query.normalize(prepared.client, response)
-		if vim.tbl_isempty(data) then
+		if outcome.status == "failed" then
+			vim.notify(outcome.message, vim.log.levels.ERROR)
+			restore(lifecycle)
+			return
+		end
+		if outcome.status == "empty" or outcome.status == "unusable" then
 			local method_label = prepared.client.available_methods[prepared.method] or prepared.method
-			local message = #issues > 0 and string.format("Wrd: No usable results for '%s'", prepared.word)
+			local message = outcome.status == "unusable" and string.format("Wrd: No usable results for '%s'", prepared.word)
 				or string.format("Wrd: No %s results for '%s'", method_label, prepared.word)
 			vim.notify(message, vim.log.levels.INFO)
+			restore(lifecycle)
 			return
 		end
-		prepared.capabilities = capabilities
+		prepared.capabilities = outcome.capabilities
 
-		local picker_session = session.new(prepared, {
+		local picker_session
+		local function open_word(restore_state)
+			return pickers.word_picker(outcome.results, prompt, prepared, picker_session, restore_state)
+		end
+		picker_session = session.new(prepared, {
 			run = workflow.run,
 			run_methods = workflow.methods,
+			reopen = open_word,
 		})
-		return pickers.word_picker(data, prompt, prepared, picker_session)
+		replace(lifecycle)
+		return open_word()
 	end
 
-	function workflow.methods(opts)
+	function workflow.methods(opts, lifecycle)
 		local prepared = prepare(opts)
-		return open_methods(prepared)
+		return open_methods(prepared, lifecycle)
 	end
 
 	return workflow

@@ -7,6 +7,7 @@ local picker_rank_jump = require("wrd.picker_rank_jump")
 local picker_filters = require("wrd.picker_filters")
 local presentations = require("wrd.presentations")
 local preview = require("wrd.preview")
+local rank_jump = require("wrd.rank_jump")
 local wrd_actions = require("wrd.actions")
 
 local M = {}
@@ -24,16 +25,24 @@ function M.layout(opts)
 	}
 end
 
-function M.open(data, prompt, opts, session)
+function M.open(data, prompt, opts, session, restore_state)
 	local presentation = presentations.new(data, opts)
+	if restore_state and restore_state.column and presentation.state then
+		presentation.state.column = restore_state.column
+	end
 	local layout = presentation.layout(M.layout(opts))
 	local highest_rank = 0
 	for _, result in ipairs(data) do
 		highest_rank = math.max(highest_rank, result.rank or 0)
 	end
 
-	pickers
-		.new(opts, {
+	local picker_opts = restore_state
+		and vim.tbl_extend("force", {}, opts, {
+			default_text = restore_state.prompt,
+			initial_mode = restore_state.insert_mode and "insert" or "normal",
+		})
+		or opts
+	local picker = pickers.new(picker_opts, {
 			prompt_title = prompt,
 			layout_strategy = layout.layout_strategy,
 			sorting_strategy = "ascending",
@@ -59,7 +68,13 @@ function M.open(data, prompt, opts, session)
 				picker_help.attach(prompt_bufnr, opts, controller)
 				presentation.attach(prompt_bufnr, map, controller)
 				if (opts.capabilities or {}).parts_of_speech then
-					picker_filters.attach(prompt_bufnr, data, presentation.finder_for, controller)
+					picker_filters.attach(
+						prompt_bufnr,
+						data,
+						presentation.finder_for,
+						controller,
+						restore_state and restore_state.filter
+					)
 				end
 				if (opts.capabilities or {}).rank_jump then
 					jump = picker_rank_jump.attach(
@@ -84,7 +99,12 @@ function M.open(data, prompt, opts, session)
 				return true
 			end,
 		})
-		:find()
+	if restore_state and restore_state.rank then
+		picker:register_completion_callback(function(active_picker)
+			rank_jump.select(active_picker, restore_state.rank)
+		end)
+	end
+	picker:find()
 end
 
 return M

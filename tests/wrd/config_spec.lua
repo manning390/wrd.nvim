@@ -69,4 +69,39 @@ describe("wrd configuration", function()
 		assert.is_true(second.rank_jump.enabled)
 		assert.are.equal(0.95, second.picker.layout_config.width)
 	end)
+
+	it("rejects invalid top-level and nested values with their configuration paths", function()
+		assert.has_error(function()
+			config.setup("invalid")
+		end, "Wrd Error: config.setup must be a table (got string)")
+
+		assert.has_error(function()
+			config.setup({ rank_jump = { delay_ms = -1 } })
+		end, "Wrd Error: config.rank_jump.delay_ms must be a non-negative number (got number)")
+
+		assert.has_error(function()
+			config.setup({ picker = { presentation = "columns" } })
+		end, "Wrd Error: config.picker.presentation must be 'list' or 'grid' (got \"columns\")")
+	end)
+
+	it("retains the last valid configuration when a later setup call is invalid", function()
+		local original = config.setup({ default_method = "sounds_like" })
+
+		pcall(config.setup, { picker = { grid = { columns = 0 } } })
+
+		assert.are.equal(original, config.get())
+		assert.are.equal("sounds_like", config.get().default_method)
+	end)
+
+	it("allows mappings to be disabled without constraining Telescope action values", function()
+		local custom_action = { type = "action_key", key = "select_default" }
+		local values = config.setup({
+			mappings = { i = { ["<C-y>"] = false, ["<C-k>"] = custom_action } },
+			picker = { grid = { mappings = { left = false } } },
+		})
+
+		assert.is_false(values.mappings.i["<C-y>"])
+		assert.are.equal(custom_action, values.mappings.i["<C-k>"])
+		assert.is_false(values.picker.grid.mappings.left)
+	end)
 end)

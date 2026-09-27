@@ -8,6 +8,8 @@ local current_picker
 local copied_word
 local applied_target
 local restored_prompt
+local transition_lifecycle
+local reopened_state
 local wrd_actions
 
 local module_names = {
@@ -33,6 +35,8 @@ describe("wrd picker actions", function()
 		copied_word = nil
 		applied_target = nil
 		restored_prompt = nil
+		transition_lifecycle = nil
+		reopened_state = nil
 
 		package.loaded["telescope.actions"] = {
 			close = function(prompt_bufnr)
@@ -64,12 +68,25 @@ describe("wrd picker actions", function()
 		current_picker = {
 			_wrd = {
 				restore_prompt = function(insert_mode) restored_prompt = insert_mode end,
+				snapshot = function(insert_mode)
+					return { prompt = "fuzzy", rank = 3, filter = "noun", insert_mode = insert_mode }
+				end,
 				session = {
 					query_word = query_word,
 					target = target,
-					follow = function(word) followed_word = word end,
-					choose_method = function() methods_requested = true end,
-					change_word = function(word) changed_word = word end,
+					follow = function(word, lifecycle)
+						followed_word = word
+						transition_lifecycle = lifecycle
+					end,
+					choose_method = function(lifecycle)
+						methods_requested = true
+						transition_lifecycle = lifecycle
+					end,
+					change_word = function(word, lifecycle)
+						changed_word = word
+						transition_lifecycle = lifecycle
+					end,
+					reopen = function(state) reopened_state = state end,
 				},
 			},
 		}
@@ -81,7 +98,7 @@ describe("wrd picker actions", function()
 		end
 	end)
 
-	it("closes the current picker and follows the highlighted word", function()
+	it("keeps the current picker until a followed query is ready", function()
 		attach_session("cheese")
 		selection = {
 			wrd = {
@@ -89,19 +106,25 @@ describe("wrd picker actions", function()
 			},
 		}
 
-		wrd_actions.wrd_follow(42)
+		wrd_actions.wrd_follow(0)
 
-		assert.are.equal(42, closed_prompt)
+		assert.is_nil(closed_prompt)
 		assert.are.equal("parmesan", followed_word)
+		transition_lifecycle.before_open()
+		assert.are.equal(0, closed_prompt)
 	end)
 
-	it("changes method for the current query word after closing the picker", function()
+	it("snapshots and closes the current picker before method selection", function()
 		attach_session("cheese")
 
-		wrd_actions.wrd_methods(84)
+		wrd_actions.wrd_methods(0)
 
-		assert.are.equal(84, closed_prompt)
+		assert.are.equal(0, closed_prompt)
 		assert.is_true(methods_requested)
+		transition_lifecycle.restore()
+		assert.are.equal("fuzzy", reopened_state.prompt)
+		assert.are.equal(3, reopened_state.rank)
+		assert.are.equal("noun", reopened_state.filter)
 	end)
 
 	it("changes the current query word while preserving its insertion target", function()
@@ -123,6 +146,8 @@ describe("wrd picker actions", function()
 
 		assert.are.equal("bread", changed_word)
 		assert.is_nil(restored_prompt)
+		assert.is_nil(closed_prompt)
+		assert.is_not_nil(transition_lifecycle)
 	end)
 
 	it("restores picker focus after cancelling a query-word change", function()

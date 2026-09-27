@@ -63,6 +63,28 @@ describe("wrd public API", function()
 		}, notification)
 	end)
 
+	it("reports provider failures without treating them as empty results", function()
+		local notification
+		vim.notify = function(message, level)
+			notification = { message = message, level = level }
+		end
+		local wrd = reload_wrd()
+		local client = {
+			key = "fake",
+			available_methods = { synonym = "Synonym" },
+			normalize = function(values) return values end,
+			synonym = function() error("service unavailable") end,
+		}
+
+		wrd.setup({ commands = false })
+		local result = wrd.run({ word = "parmesan", method = "synonym", client = client })
+
+		assert.is_nil(result)
+		assert.are.equal(vim.log.levels.ERROR, notification.level)
+		assert.is_truthy(notification.message:find("Wrd: Client 'fake' method 'synonym' failed", 1, true))
+		assert.is_truthy(notification.message:find("service unavailable", 1, true))
+	end)
+
 	it("passes a non-Datamuse client through the normalized picker boundary", function()
 		local wrd = reload_wrd()
 		local picker = require("wrd.pickers")

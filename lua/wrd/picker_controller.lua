@@ -24,6 +24,17 @@ function M.attach(prompt_bufnr, session)
 		end)
 	end
 
+	function controller.snapshot(insert_mode)
+		local selected = action_state.get_selected_entry()
+		return {
+			prompt = picker._get_prompt and picker:_get_prompt() or "",
+			rank = selected and selected.wrd and selected.wrd.rank or nil,
+			filter = controller.filters and controller.filters.current() or "all",
+			column = controller.grid and controller.grid.column or nil,
+			insert_mode = insert_mode,
+		}
+	end
+
 	picker._wrd = controller
 	return controller
 end

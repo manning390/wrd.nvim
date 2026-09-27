@@ -9,6 +9,19 @@ local selection_target = require("wrd.selection")
 
 local M = {}
 
+local function replacement_lifecycle(controller, prompt_bufnr, return_to_insert)
+	return {
+		before_open = function()
+			if vim.api.nvim_buf_is_valid(prompt_bufnr) then
+				actions.close(prompt_bufnr)
+			end
+		end,
+		restore = function()
+			controller.restore_prompt(return_to_insert)
+		end,
+	}
+end
+
 function M.wrd_select(prompt_bufnr)
 	local selection = action_state.get_selected_entry()
 	if not selection then
@@ -41,8 +54,8 @@ function M.wrd_follow(prompt_bufnr)
 	local controller = picker_controller.get(prompt_bufnr)
 	local session = controller and controller.session
 	if selection and session then
-		actions.close(prompt_bufnr)
-		session.follow(selection.wrd.word)
+		local return_to_insert = vim.api.nvim_get_mode().mode:sub(1, 1) == "i"
+		session.follow(selection.wrd.word, replacement_lifecycle(controller, prompt_bufnr, return_to_insert))
 	end
 end
 
@@ -50,8 +63,12 @@ function M.wrd_methods(prompt_bufnr)
 	local controller = picker_controller.get(prompt_bufnr)
 	local session = controller and controller.session
 	if session then
+		local return_to_insert = vim.api.nvim_get_mode().mode:sub(1, 1) == "i"
+		local snapshot = controller.snapshot(return_to_insert)
 		actions.close(prompt_bufnr)
-		session.choose_method()
+		session.choose_method({
+			restore = function() session.reopen(snapshot) end,
+		})
 	end
 end
 
@@ -70,10 +87,7 @@ function M.wrd_change_word(prompt_bufnr)
 			return
 		end
 
-		if vim.api.nvim_buf_is_valid(prompt_bufnr) then
-			actions.close(prompt_bufnr)
-		end
-		session.change_word(word)
+		session.change_word(word, replacement_lifecycle(controller, prompt_bufnr, return_to_insert))
 	end)
 end
 
